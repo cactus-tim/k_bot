@@ -7,24 +7,22 @@ from bot_instance import logger
 def webscrab_error_handler(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        nonlocal_driver = None
         try:
-            return await func(*args, **kwargs, driver_container=nonlocal_driver)
+            result = await func(*args, **kwargs)
+            return result
         except TimeoutException as e:
             logger.error(f"Ошибка ожидания загрузки страницы: {e}")
+            return None
         except NoSuchElementException as e:
             logger.error(f"Ошибка нахождения элемента для ввода логина/пароля: {e}")
+            return None
         except ElementNotInteractableException as e:
             logger.error(f"Элемент не может быть использован: {e}")
+            return None
         except WebDriverException as e:
             logger.error(f"Ошибка инициализации драйвера: {e}")
+            return None
         except Exception as e:
             logger.error(f"Неизвестная ошибка: {str(e)}")
-        finally:
-            if nonlocal_driver is not None:
-                try:
-                    nonlocal_driver.quit()
-                except WebDriverException as e:
-                    logger.exception(f"Ошибка при закрытии драйвера: {e}")
             return None
     return wrapper

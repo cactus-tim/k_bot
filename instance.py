@@ -2,6 +2,7 @@ from aiogram import Bot
 from aiogram.enums import ParseMode
 import os
 from dotenv import load_dotenv
+from openai import OpenAI
 import sys
 from aiogram.client.bot import DefaultBotProperties
 import logging
@@ -30,3 +31,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 event = asyncio.Event()
+
+token = os.getenv('TOKEN_API_GPT')
+client = OpenAI(api_key=token)
