@@ -1,7 +1,7 @@
 from functools import wraps
 from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException, ElementNotInteractableException
 
-from bot_instance import logger
+from instance import logger
 
 
 def webscrab_error_handler(func):

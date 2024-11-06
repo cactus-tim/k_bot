@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, Boolean, ARRAY, BigInteger, Fore
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncAttrs
 
-from bot_instance import SQL_URL_RC
+from instance import SQL_URL_RC
 
 engine = create_async_engine(url=SQL_URL_RC, echo=True)
 async_session = async_sessionmaker(engine)
@@ -27,13 +27,13 @@ class User(Base):
     questing = Column(Boolean, default=False)
     # is_quested = Column(Boolean, default=False)
     # is_active = Column(Boolean, default=False)
-    # is_superuser = Column(Boolean, default=False)
+    is_superuser = Column(Boolean, default=False)
 
 
 class SecondPerson(Base):
     __tablename__ = "second_person"
 
-    id = Column(BigInteger, primary_key=True, index=True, nullable=False)  # autoincrement=True
+    id = Column(BigInteger, primary_key=True, index=True, nullable=False)  # autoincrement=True надо придумать как им давать индексы
     info = Column(String, default='')
     status = Column(String, default='')  # TODO: start state
 
@@ -52,7 +52,7 @@ class Dialogs(Base):
 class Proxy(Base):
     __tablename__ = "proxy"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     proxy = Column(String, default='', nullable=False)
     in_use = Column(Integer, default=0)
     all_use = Column(Integer, default=0)

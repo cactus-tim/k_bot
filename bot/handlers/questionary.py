@@ -1,9 +1,8 @@
 from aiogram import Router, F
 
-from instance import client, bot
+from instance import bot
 from database.req import get_user, update_user
-from bot.errors import safe_send_message
-from user_handlers import add_acc
+from bot.handlers.errors import safe_send_message
 from database.models import User
 
 router = Router()
@@ -14,8 +13,8 @@ async def check_services_good(user: User):
         await safe_send_message(bot, user.id,
                                 text=f"Вы не закончили добавление аккаунта от сервиса {user.cur_service}."
                                      "\nПожалуста, пройдите эту процедуру заново.\n"
-                                     "Для этого введите \\add_acc"
-                                     "А затем продолжите регистрацию, для этого нажмите \\start")
+                                     "Для этого введите /add_acc"
+                                     "А затем продолжите регистрацию, для этого нажмите /start")
         return None
     else:
         return "ok"

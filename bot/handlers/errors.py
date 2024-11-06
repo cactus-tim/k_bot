@@ -4,7 +4,7 @@ from aiogram.types import ReplyKeyboardRemove, Message
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter, TelegramUnauthorizedError, TelegramNetworkError
 
-from bot_instance import logger, bot
+from instance import logger, bot
 from aiohttp import ClientConnectorError
 
 

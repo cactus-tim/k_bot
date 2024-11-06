@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
 from database.req import get_user
 from database.models import User
@@ -24,3 +24,25 @@ async def get_services_ikb(user: User) -> InlineKeyboardMarkup:
     ikb = [[InlineKeyboardButton(text=service, callback_data=service.lower())] for service in services if service not in user.services]
     ikeyboard = InlineKeyboardMarkup(inline_keyboard=ikb)
     return ikeyboard
+
+
+async def get_services_kb(user: User) -> ReplyKeyboardMarkup:
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=service, callback_data=service.lower())] for service in services if service not in user.services],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+async def get_services_update_ikb(user: User) -> InlineKeyboardMarkup:
+    ikb = [[InlineKeyboardButton(text=service, callback_data=service.lower())] for service in services if service in user.services]
+    ikeyboard = InlineKeyboardMarkup(inline_keyboard=ikb)
+    return ikeyboard
+
+
+async def get_services_update_kb(user: User) -> ReplyKeyboardMarkup:
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=service, callback_data=service.lower())] for service in services if service in user.services],
+        resize_keyboard=True
+    )
+    return keyboard
