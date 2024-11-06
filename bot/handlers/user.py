@@ -61,7 +61,7 @@ class AccState(StatesGroup):
 @router.message(Command("add_acc"))
 async def add_acc(message: Message, state: FSMContext):
     user = await get_user(message.from_user.id)
-    if await check_ability(len(user.services)):
+    if check_ability(len(user.services)):
         await safe_send_message(bot, message, text="Вы уже добавили аккуанты всех сервисов с которыми мы работаем.")
     else:
         await safe_send_message(bot, message, text="Выбери сервис, аккаунт которого ты хочешь добавить:",  # TODO: rewrite add_acc message
@@ -82,7 +82,8 @@ async def add_acc_part_2(message: Message, state: FSMContext):
 @router.message(AccState.waiting_mail)
 async def add_acc_part_3(message: Message, state: FSMContext):
     user = await get_user(message.from_user.id)
-    await update_acc(message.from_user.id, user.cur_service, {"login": message.text[6:].strip()})
+    login = message.text[6:].strip() if message.text[:6].strip() == 'Пароль:' else message.text.strip()
+    await update_acc(message.from_user.id, user.cur_service, {"login": login})
     await safe_send_message(bot, message, text="Теперь отправьте пароль от аккаунта в формате.\n"
                                                "Пароль:*ваш пароль*")
     await state.set_state(AccState.waiting_password)
@@ -91,11 +92,14 @@ async def add_acc_part_3(message: Message, state: FSMContext):
 @router.message(AccState.waiting_password)
 async def add_acc_part_4(message: Message, state: FSMContext):
     user = await get_user(message.from_user.id)
-    await update_acc(message.from_user.id, user.cur_service, {"password": message.text[7:].strip()})
+    password = message.text[7:].strip() if message.text[:7].strip() == 'Пароль:' else message.text
+    await update_acc(message.from_user.id, user.cur_service, {"password": password})
     acc = await get_acc(message.from_user.id, user.cur_service)
     if await check_rightness(acc.login, acc.password):
         await safe_send_message(bot, message, text="Все отлично, аккаунт добавлен.")
-        await update_user(message.from_user.id, {'cur_service': ''})
+        services = user.services
+        services.append(user.cur_service)
+        await update_user(message.from_user.id, {'cur_service': '', 'services': services})
     else:
         await safe_send_message(bot, message, text="Что то пошло не так, попробуйте еще раз.")
     await state.clear()
@@ -121,7 +125,6 @@ async def update_acc_part_1(message: Message, state: FSMContext):
 @router.message(AccUpdateState.waiting_service)
 async def update_acc_part_2(message: Message, state: FSMContext):
     await update_user(message.from_user.id, {'cur_service': message.text})
-    await create_acc(message.from_user.id, message.text)
     await safe_send_message(bot, message, text="Теперь отправьте новый пароль от аккаунта в формате.\n"
                                                "Пароль:*ваш пароль*")
     await state.set_state(AccUpdateState.waiting_password)
@@ -130,7 +133,8 @@ async def update_acc_part_2(message: Message, state: FSMContext):
 @router.message(AccUpdateState.waiting_password)
 async def update_acc_part_3(message: Message, state: FSMContext):
     user = await get_user(message.from_user.id)
-    await update_acc(message.from_user.id, user.cur_service, {"password": message.text[7:].strip()})
+    password = message.text[7:].strip() if message.text[:7].strip() == 'Пароль:' else message.text
+    await update_acc(message.from_user.id, user.cur_service, {"password": password})
     acc = await get_acc(message.from_user.id, user.cur_service)
     if await check_rightness(acc.login, acc.password):
         await safe_send_message(bot, message, text="Все отлично, пароль изменен.")

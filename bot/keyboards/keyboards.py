@@ -16,33 +16,33 @@ def get_main_ikb() -> InlineKeyboardMarkup:
     return ikeyboard
 
 
-async def check_ability(len_user_list: int):
+def check_ability(len_user_list: int):
     return True if len_user_list == len(services) else False
 
 
-async def get_services_ikb(user: User) -> InlineKeyboardMarkup:
+def get_services_ikb(user: User) -> InlineKeyboardMarkup:
     ikb = [[InlineKeyboardButton(text=service, callback_data=service.lower())] for service in services if service not in user.services]
     ikeyboard = InlineKeyboardMarkup(inline_keyboard=ikb)
     return ikeyboard
 
 
-async def get_services_kb(user: User) -> ReplyKeyboardMarkup:
+def get_services_kb(user: User) -> ReplyKeyboardMarkup:
     keyboard = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=service, callback_data=service.lower())] for service in services if service not in user.services],
+        keyboard=[[KeyboardButton(text=service)] for service in services if service not in user.services],
         resize_keyboard=True
     )
     return keyboard
 
 
-async def get_services_update_ikb(user: User) -> InlineKeyboardMarkup:
+def get_services_update_ikb(user: User) -> InlineKeyboardMarkup:
     ikb = [[InlineKeyboardButton(text=service, callback_data=service.lower())] for service in services if service in user.services]
     ikeyboard = InlineKeyboardMarkup(inline_keyboard=ikb)
     return ikeyboard
 
 
-async def get_services_update_kb(user: User) -> ReplyKeyboardMarkup:
+def get_services_update_kb(user: User) -> ReplyKeyboardMarkup:
     keyboard = ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=service, callback_data=service.lower())] for service in services if service in user.services],
+        keyboard=[[KeyboardButton(text=service)] for service in services if service in user.services],
         resize_keyboard=True
     )
     return keyboard

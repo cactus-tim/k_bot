@@ -131,7 +131,7 @@ async def get_best_proxy():
     async with async_session() as session:
         best_proxy = await session.scalar(select(Proxy).order_by(Proxy.in_use))
         if best_proxy:
-            return best_proxy.proxy
+            return best_proxy.id
         else:
             raise Error404
 
@@ -159,13 +159,13 @@ async def get_acc(tg_id: int, service: str):
             return "not created"
 
 
-async def create_acc(tg_id: int, service: str):  # TODO: automatically add proxy (and implement proxy_check)
+async def create_acc(tg_id: int, service: str):
     async with async_session() as session:
         acc = await get_acc(tg_id, service)
         data = {}
         if acc == 'not created':
             data['user_id'] = tg_id
-            data['proxy'] = await get_best_proxy()
+            data['proxy_id'] = await get_best_proxy()
             data['service'] = service
             user_data = Accs(**data)
             session.add(user_data)

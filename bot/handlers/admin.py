@@ -40,7 +40,7 @@ class DelProxyState(StatesGroup):
     waiting_proxy = State()
 
 
-@router.message(Command("add_proxy"))
+@router.message(Command("del_proxy"))
 async def cmd_add_proxy(message: Message, state: FSMContext):
     user = await get_user(message.from_user.id)
     if not user.is_superuser:

@@ -7,12 +7,12 @@ from datetime import datetime, timedelta
 from pytz import timezone
 
 from instance import bot
-from bot.handlers import user, errors, questionary
+from bot.handlers import user, errors, questionary, admin
 from database.models import async_main
 
 
 def register_routers(dp: Dispatcher) -> None:
-    dp.include_routers(user.router, errors.router, questionary.router)
+    dp.include_routers(user.router, errors.router, questionary.router, admin.router)
 
 
 async def main() -> None:
