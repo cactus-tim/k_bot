@@ -171,3 +171,8 @@ async def update_acc_part_2(message: Message, state: FSMContext):
         await update_user(message.from_user.id, {'services': new_services})
         await safe_send_message(bot, message, text="Аккаунт успешно удален")
     await state.clear()
+
+
+@router.message(Command("new_data"))
+async def get_new_thread(message: Message):
+    pass

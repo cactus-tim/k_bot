@@ -102,3 +102,37 @@ async def mamba_dialogs_handler(driver, wait):
 
         dialog = unread_dialogs[0]
         await mamba_dialog_handler(driver, wait, dialog)
+
+
+@webscrab_error_handler
+async def mamba_dialog_to_data_handler(driver, wait, dialog, parsed_dialogs: list):
+    dialog.click()
+    wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
+    time.sleep(10)
+    messages = driver.find_elements(By.XPATH, '//span[@data-name="message-text"]')
+
+    # TODO: parse dialogs to json
+    data = ''
+
+    parsed_dialogs.append(dialog)
+    return parsed_dialogs, data
+
+
+@webscrab_error_handler
+async def mamba_dialogs_to_data_handler(driver, wait):
+    parsed_dialogs = []
+    while True:
+        time.sleep(20)
+        await close_popup(driver)
+        read_dialogs = driver.find_elements(By.XPATH, '//a[not(.//div[@data-name="counter-unread-message"])]')
+        # print(f"Количество непрочитанных диалогов: {len(unread_dialogs)}")
+        read_dialogs = list(set(read_dialogs) - set(parsed_dialogs))
+
+        if not read_dialogs:
+            # print("Hет непрочитанных диалогов.")
+            break
+
+        dialog = read_dialogs[0]
+        parsed_dialogs, data = await mamba_dialog_to_data_handler(driver, wait, dialog, parsed_dialogs)
+
+        return data

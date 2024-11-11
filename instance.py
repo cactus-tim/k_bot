@@ -32,5 +32,5 @@ logger = logging.getLogger(__name__)
 
 event = asyncio.Event()
 
-# token = os.getenv('TOKEN_API_GPT')
-# client = OpenAI(api_key=token)
+token = os.getenv('TOKEN_API_GPT')
+client = OpenAI(api_key=token)
