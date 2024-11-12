@@ -18,13 +18,16 @@ class User(Base):
     __tablename__ = "user"
 
     id = Column(BigInteger, primary_key=True, index=True, nullable=False)
+    name = Column(String, default='')
     info = Column(String, default='')
     brain_id = Column(String, default='')
-    s_a_id = Column(String, default='')
+    def_id = Column(String, default='')
     thread_q1 = Column(String, default='')
+    thread_q2 = Column(String, default='')
     services = Column(ARRAY(String), default=list)
     cur_service = Column(String, default='')
-    # is_quested = Column(Boolean, default=False)
+    is_quested1 = Column(Boolean, default=False)
+    is_quested2 = Column(Boolean, default=False)
     # is_active = Column(Boolean, default=False)
     is_superuser = Column(Boolean, default=False)
 
