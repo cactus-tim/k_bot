@@ -46,3 +46,27 @@ def get_services_update_kb(user: User) -> ReplyKeyboardMarkup:
         resize_keyboard=True
     )
     return keyboard
+
+
+def get_new_data_kb() -> ReplyKeyboardMarkup:
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="Первую"), KeyboardButton(text="Вторую"), KeyboardButton(text="Обе")]],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def get_add_data_kb() -> ReplyKeyboardMarkup:
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="Первую"), KeyboardButton(text="Вторую")]],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def get_end_add_kb() -> ReplyKeyboardMarkup:
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="Готово")]],
+        resize_keyboard=True
+    )
+    return keyboard

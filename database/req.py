@@ -2,8 +2,16 @@ from sqlalchemy import select, desc, distinct, and_
 
 from database.models import User, SecondPerson, Dialogs, Proxy, Accs, async_session
 from errors.errors import Error404, Error409
+from instance import client
+from errors.error_handlers import db_error_handler
 
 
+async def create_thread():
+    thread = client.beta.threads.create()
+    return thread.id
+
+
+@db_error_handler
 async def get_user(tg_id: int):
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.id == tg_id))
@@ -13,6 +21,7 @@ async def get_user(tg_id: int):
             return "not created"
 
 
+@db_error_handler
 async def create_user(tg_id: int):
     async with async_session() as session:
         user = await get_user(tg_id)
@@ -26,6 +35,7 @@ async def create_user(tg_id: int):
             raise Error409
 
 
+@db_error_handler
 async def update_user(tg_id: int, data: dict):
     async with async_session() as session:
         user = await get_user(tg_id)
@@ -38,6 +48,7 @@ async def update_user(tg_id: int, data: dict):
             await session.commit()
 
 
+@db_error_handler
 async def get_all_users_ids():
     async with async_session() as session:
         users_tg_id = await session.execute(select(distinct(User.id)))
@@ -47,6 +58,7 @@ async def get_all_users_ids():
         return users_tg_ids
 
 
+@db_error_handler
 async def get_s_p(id: int):
     async with async_session() as session:
         s_p = await session.scalar(select(SecondPerson).where(SecondPerson.id == id))
@@ -56,6 +68,7 @@ async def get_s_p(id: int):
             return "not created"
 
 
+@db_error_handler
 async def create_s_p(data:dict):
     async with async_session() as session:
         s_p_data = SecondPerson(**data)
@@ -63,6 +76,7 @@ async def create_s_p(data:dict):
         await session.commit()
 
 
+@db_error_handler
 async def update_s_p(id: int, data: dict):
     async with async_session() as session:
         s_p = await get_s_p(id)
@@ -75,6 +89,7 @@ async def update_s_p(id: int, data: dict):
             await session.commit()
 
 
+@db_error_handler
 async def get_proxy_by_proxy(proxy: str):
     async with async_session() as session:
         proxyy = await session.scalar(select(Proxy).where(Proxy.proxy == proxy))
@@ -84,6 +99,7 @@ async def get_proxy_by_proxy(proxy: str):
             return "not created"
 
 
+@db_error_handler
 async def create_proxy(proxy_d: str):
     async with async_session() as session:
         proxy = await get_proxy_by_proxy(proxy_d)
@@ -97,6 +113,7 @@ async def create_proxy(proxy_d: str):
             raise Error409
 
 
+@db_error_handler
 async def update_proxy(proxy_d: str, data: dict):
     async with async_session() as session:
         proxy = await get_proxy_by_proxy(proxy_d)
@@ -109,6 +126,7 @@ async def update_proxy(proxy_d: str, data: dict):
             await session.commit()
 
 
+@db_error_handler
 async def get_proxy_by_id(proxy_id: int):
     async with async_session() as session:
         proxyy = await session.scalar(select(Proxy).where(Proxy.id == proxy_id))
@@ -118,6 +136,7 @@ async def get_proxy_by_id(proxy_id: int):
             return "not created"
 
 
+@db_error_handler
 async def get_proxy_id_by_proxy(proxy: str):
     async with async_session() as session:
         proxyy = await session.scalar(select(Proxy).where(Proxy.proxy == proxy))
@@ -127,15 +146,17 @@ async def get_proxy_id_by_proxy(proxy: str):
             return "not created"
 
 
+@db_error_handler
 async def get_best_proxy():
     async with async_session() as session:
         best_proxy = await session.scalar(select(Proxy).order_by(Proxy.in_use))
         if best_proxy:
             return best_proxy.id
         else:
-            raise Error404
+            return None
 
 
+@db_error_handler
 async def del_proxy(proxy_d: str):
     async with async_session() as session:
         proxy = await get_proxy_by_proxy(proxy_d)
@@ -147,6 +168,7 @@ async def del_proxy(proxy_d: str):
             return "ok"
 
 
+@db_error_handler
 async def get_acc(tg_id: int, service: str):
     async with async_session() as session:
         acc = await session.scalar(select(Accs).where(and_(
@@ -159,6 +181,7 @@ async def get_acc(tg_id: int, service: str):
             return "not created"
 
 
+@db_error_handler
 async def create_acc(tg_id: int, service: str):
     async with async_session() as session:
         acc = await get_acc(tg_id, service)
@@ -174,6 +197,7 @@ async def create_acc(tg_id: int, service: str):
             raise Error409
 
 
+@db_error_handler
 async def update_acc(tg_id: int, service: str, data: dict):
     async with async_session() as session:
         acc = await get_acc(tg_id, service)
@@ -186,6 +210,7 @@ async def update_acc(tg_id: int, service: str, data: dict):
             await session.commit()
 
 
+@db_error_handler
 async def del_acc(tg_id: int, service: str):
     async with async_session() as session:
         acc = await get_acc(tg_id, service)
@@ -197,27 +222,27 @@ async def del_acc(tg_id: int, service: str):
             return "ok"
 
 
-async def get_dialog(user_id: int, s_p_id: int):
+@db_error_handler
+async def get_dialog(dialog_id: int):
     async with async_session() as session:
-        dialog = await session.scalar(select(Dialogs).where(and_(
-            Dialogs.user_id == user_id,
-            Dialogs.second_person_id == s_p_id
-        )))
+        dialog = await session.scalar(select(Dialogs).where(Dialogs.id == dialog_id))
         if dialog:
             return dialog
         else:
             return "not created"
 
 
-async def create_dialog(user_id: int, s_p_id: int):
+@db_error_handler
+async def create_dialog(dialog_id: int, user_id: int):
     async with async_session() as session:
-        dialog = await get_dialog(user_id, s_p_id)
+        dialog = await get_dialog(dialog_id)
         data = {}
         if dialog == 'not created':
             data['user_id'] = user_id
-            data['second_person_id'] = s_p_id
-            data['thread_f_a'] = ''  # TODO: implement here get_thread
-            data['thread_s_a'] = ''  # TODO: and here
+            data['thread_brain'] = await create_thread()
+            # TODO: initialize dialog
+            data['thread_def'] = await create_thread()
+            # TODO: initialize dialog
             dialog_data = Dialogs(**data)
             session.add(dialog_data)
             await session.commit()
@@ -225,9 +250,10 @@ async def create_dialog(user_id: int, s_p_id: int):
             raise Error409
 
 
-async def update_dialog(user_id: int, s_p_id: int, data: dict):
+@db_error_handler
+async def update_dialog(dialog_id: int, data: dict):
     async with async_session() as session:
-        dialog = await get_dialog(user_id, s_p_id)
+        dialog = await get_dialog(dialog_id)
         if dialog == 'not created':
             raise Error404
         else:

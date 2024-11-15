@@ -7,7 +7,10 @@ from selenium.webdriver.chrome.options import Options
 import time
 from webdriver_manager.chrome import ChromeDriverManager
 
+from brain.brain import check_dialog, read_msg, write_msg
+from database.req import get_proxy_by_id, get_best_proxy, update_acc, get_dialog
 from errors.error_handlers import webscrab_error_handler
+from errors.errors import ProxyError
 
 
 async def close_popup(driver):
@@ -20,12 +23,22 @@ async def close_popup(driver):
         pass
 
 
-async def proxy_initialization(user_id):
-    # TODO: implement get_proxy (if its first user contact, get new, else get from db)
-    #                           (check proxy_life, and if it necessary, get new proxy)
-    proxy = "your_proxy_address:port"
+async def check_proxy(proxy):
+    return True
+
+
+@webscrab_error_handler
+async def proxy_initialization(user_id, proxy_id):
+    proxy = await get_proxy_by_id(proxy_id)
+    if not check_proxy(proxy):
+        new_proxy_id = await get_best_proxy()
+        if not new_proxy_id:
+            raise ProxyError
+        await update_acc(user_id, "mamba", {'proxy_id': new_proxy_id})
+        await proxy_initialization(user_id, new_proxy_id)
+        return
     chrome_options = Options()
-    chrome_options.add_argument(f'--proxy-server={proxy}')
+    chrome_options.add_argument(f'--proxy-server={proxy.proxy}')
     return chrome_options
 
 
@@ -33,8 +46,7 @@ async def proxy_initialization(user_id):
 async def create_con(options):
     chrome_driver_path = "/Users/timofejsosnin/PycharmProjects/k_bot/k_bot/hands/chromedriver"
     service = Service(chrome_driver_path)
-    driver = webdriver.Chrome(service=service)
-    # driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=service)  # webdriver.Chrome(service=service, options=options)
     wait = WebDriverWait(driver, 10)
     return driver, wait
 
@@ -61,11 +73,16 @@ async def mamba_login(driver, wait, username, pas):
 
 
 @webscrab_error_handler
-async def mamba_dialog_handler(driver, wait, dialog):
+async def mamba_dialog_handler(driver, wait, dialog, user_id):
     unread_count = int(dialog.find_element(By.XPATH, './/span[@class="sc-d27dsj-0 fujUOM"]').text)
     dialog.click()
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
     time.sleep(10)
+    current_url = driver.current_url
+    dialog_id = current_url.split('/')[-2]
+    if not await check_dialog(dialog_id, user_id):
+        return
+    dialog_struct = await get_dialog(dialog_id)
     messages = driver.find_elements(By.XPATH, '//span[@data-name="message-text"]')
     messages = messages[-unread_count:]
     msg = ''
@@ -73,23 +90,26 @@ async def mamba_dialog_handler(driver, wait, dialog):
         if message.text == "Привет! Похоже, что мы понравились друг другу. Давай пообщаемся!":
             continue
         msg += message.text + '\n'
-    print(msg)  # TODO: implement handler
-    time.sleep(15)
-    ans = "как дела?"  # TODO: implement handler
-    message_input = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, 'textarea[data-name="input-textarea"]'))
-    )
-    message_input.click()
-    message_input.send_keys(ans)
+    if not await read_msg(dialog_id, msg):
+        return
+    flag, ans = await write_msg(dialog_id, msg)
+    if not flag:
+        return
+    for an in ans.split('\n'):
+        message_input = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'textarea[data-name="input-textarea"]'))
+        )
+        message_input.click()
+        message_input.send_keys(an)
 
-    send_button = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.XPATH, '//div[@data-name="messenger-send-message-icon"]'))
-    )
-    send_button.click()
+        send_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//div[@data-name="messenger-send-message-icon"]'))
+        )
+        send_button.click()
 
 
 @webscrab_error_handler
-async def mamba_dialogs_handler(driver, wait):
+async def mamba_dialogs_handler(driver, wait, user_id):
     while True:
         time.sleep(20)
         await close_popup(driver)
@@ -99,9 +119,8 @@ async def mamba_dialogs_handler(driver, wait):
         if not unread_dialogs:
             # print("Нет непрочитанных диалогов.")
             break
-
         dialog = unread_dialogs[0]
-        await mamba_dialog_handler(driver, wait, dialog)
+        await mamba_dialog_handler(driver, wait, dialog, user_id)
 
 
 @webscrab_error_handler

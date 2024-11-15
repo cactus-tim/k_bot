@@ -43,12 +43,12 @@ class SecondPerson(Base):
 class Dialogs(Base):
     __tablename__ = "dialogs"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, ForeignKey("user.id"), nullable=False)
-    second_person_id = Column(BigInteger, ForeignKey("second_person.id"), nullable=False)
-    thread_f_a = Column(String, default='')
-    thread_s_a = Column(String, default='')
-    status = Column(String, default='')  # TODO: start state
+    # second_person_id = Column(BigInteger, ForeignKey("second_person.id"), nullable=False)
+    thread_brain = Column(String, default='')
+    thread_def = Column(String, default='')
+    status = Column(String, default='in_p')  # in_p, banned, approved
 
 
 class Proxy(Base):

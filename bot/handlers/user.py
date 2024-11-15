@@ -28,7 +28,7 @@ async def cmd_start(message: Message):
         await create_user(message.from_user.id)
     await safe_send_message(bot, message, text="Привет!\nМеня зовут K_bot и я помогу найти тебе пару.\n"
                                                "Для начала нажми кнопку внизу сообщения что бы я узнал тебя поближе, "
-                                               "после чего мы начнем)",  # TODO: rewrite start message
+                                               "после чего мы начнем)",
                             reply_markup=get_main_ikb())
 
 
@@ -64,7 +64,7 @@ async def add_acc(message: Message, state: FSMContext):
     if check_ability(len(user.services)):
         await safe_send_message(bot, message, text="Вы уже добавили аккуанты всех сервисов с которыми мы работаем.")
     else:
-        await safe_send_message(bot, message, text="Выбери сервис, аккаунт которого ты хочешь добавить:",  # TODO: rewrite add_acc message
+        await safe_send_message(bot, message, text="Выбери сервис, аккаунт которого ты хочешь добавить:",
                                 reply_markup=get_services_kb(user))
     await state.set_state(AccState.waiting_service)
 
@@ -117,8 +117,7 @@ async def update_acc_part_1(message: Message, state: FSMContext):
         await safe_send_message(bot, message, text="У вас нет подключенных сервисов")
     else:
         await safe_send_message(bot, message, text="Выбери сервис, пароль от которого ты хочешь изменить:",
-                                    # TODO: rewrite add_acc message
-                                    reply_markup=get_services_update_kb(user))
+                                reply_markup=get_services_update_kb(user))
     await state.set_state(AccUpdateState.waiting_service)
 
 
@@ -155,7 +154,6 @@ async def del_acc_part_1(message: Message, state: FSMContext):
         await safe_send_message(bot, message, text="У вас нет подключенных сервисов")
     else:
         await safe_send_message(bot, message, text="Выбери сервис, аккаунт которого ты хочешь добавить:",
-                                # TODO: rewrite add_acc message
                                 reply_markup=get_services_update_kb(user))
     await state.set_state(AccDelState.waiting_service)
 
@@ -171,8 +169,3 @@ async def update_acc_part_2(message: Message, state: FSMContext):
         await update_user(message.from_user.id, {'services': new_services})
         await safe_send_message(bot, message, text="Аккаунт успешно удален")
     await state.clear()
-
-
-@router.message(Command("new_data"))
-async def get_new_thread(message: Message):
-    pass
