@@ -80,7 +80,7 @@ async def send_dialog_to_user(dialog_id, rate):
     
     """
     thread_id = await create_thread()
-    msg += await gpt_assystent_mes(thread_id, '', str(to_summary))  # TODO: create assistant for summarize
+    msg += await gpt_assystent_mes(thread_id, 'asst_jaWzTvMtkraZtmPSc2FR2oQV', str(to_summary))
     await safe_send_message(bot, dialog.user_id, "")
 
 
@@ -88,21 +88,23 @@ async def send_dialog_to_user(dialog_id, rate):
 async def read_msg(dialog_id, msg):
     dialog = await get_dialog(dialog_id)
     user = await get_user(dialog.user_id)
-    ans = await gpt_assystent_mes(dialog_id.thread_def, user.def_id, msg)
-    if not is_number_in_range(ans):
-        raise NumberError(dialog.user_id, dialog_id)
-    rate = int(ans)
-    if 5 <= rate <= 7:
-        storage = MemoryStorage()
-        storage_key = StorageKey(bot_id=bot.id, chat_id=dialog.user_id, user_id=dialog.user_id)
-        state = FSMContext(storage=storage, key=storage_key)
-        await update_def_part_1(dialog.user_id, msg, rate, state)
-        return True
-    elif rate < 5:
-        return True
-    else:
-        await update_dialog(dialog_id, {"status": "banned"})
-        return False
+    for m in msg.split('\n'):
+        ans = await gpt_assystent_mes(dialog_id.thread_def, user.def_id, m)
+        if not is_number_in_range(ans):
+            raise NumberError(dialog.user_id, dialog_id)
+        rate = int(ans)
+        if 5 <= rate <= 7:
+            storage = MemoryStorage()
+            storage_key = StorageKey(bot_id=bot.id, chat_id=dialog.user_id, user_id=dialog.user_id)
+            state = FSMContext(storage=storage, key=storage_key)
+            await update_def_part_1(dialog.user_id, msg, rate, state)
+            continue
+        elif rate < 5:
+            continue
+        else:
+            await update_dialog(dialog_id, {"status": "banned"})
+            return False
+    return True
 
 
 @gpt_error_handler
@@ -118,7 +120,7 @@ async def write_msg(dialog_id, msg):
             if not is_number_in_range(rate_row):
                 raise NumberError(dialog.user_id, dialog_id)
             rate = int(rate_row)
-            if rate <= 4:  # TODO: fix number
+            if rate <= 5:
                 await update_dialog(dialog_id, {"status": "banned"})
                 return False, ''
             else:

@@ -10,7 +10,8 @@ from instance import bot, client
 from database.req import get_user, update_user
 from bot.handlers.errors import safe_send_message
 from database.models import User
-from brain.create_brain import gpt_assystent_mes, create_brain, create_def, update_def, update_data
+from brain.create_brain import create_brain, create_def, update_def, update_data
+from brain.brain import gpt_assystent_mes
 
 router = Router()
 
@@ -129,7 +130,7 @@ async def give_new_thread(message: Message, state: FSMContext):
         thread = client.beta.threads.create()
         thread_id = thread.id
         await update_user(user.id, {'thread_q1': thread_id})
-        f_m = await gpt_assystent_mes(thread_id, assistant_id='')
+        f_m = await gpt_assystent_mes(thread_id, assistant_id='asst_YIrqaeL1mUSgcwqDHDBZUJTq')
         await safe_send_message(bot, message, f_m)
         if message.text == "Первую":
             await state.update_data({'only_one': True})
@@ -152,7 +153,7 @@ async def start_query(callback: F.CallbackQuery, state: FSMContext):
         await update_user(user.id, {'thread_q1': thread_id})
     else:
         thread_id = user.thread_q1
-    f_m = await gpt_assystent_mes(thread_id, assistant_id='')
+    f_m = await gpt_assystent_mes(thread_id, assistant_id='asst_YIrqaeL1mUSgcwqDHDBZUJTq')
     await safe_send_message(bot, callback, f_m)
     await state.set_state(QuestState.first_quest)
 
@@ -180,7 +181,7 @@ async def gpt_handler_first(message: Message, state: FSMContext):
     else:
         return
     thread_id = await user.thread_q1
-    msg = await gpt_assystent_mes(thread_id, '', user_message)
+    msg = await gpt_assystent_mes(thread_id, 'asst_YIrqaeL1mUSgcwqDHDBZUJTq', user_message)
     break_state = msg.find('{') + msg.find('}') != -2
     if break_state:
         prompt = await clean_prompt(msg)
@@ -216,7 +217,7 @@ async def gpt_handler_second(message: Message, state: FSMContext):
         thread_name = client.beta.threads.create()
         name = await gpt_assystent_mes(thread_name.id, user.brain_id, "Как тебя зовут? Напиши только имя, больше ничего")
         await update_user(user_id, {"name": name})
-        f_m = await gpt_assystent_mes(thread_id, assistant_id='', mes=f"Давай начнем, ты будешь общаться с {name}")
+        f_m = await gpt_assystent_mes(thread_id, assistant_id='asst_k6tL6xds8nSVBOehcdIFzqee', mes=f"Давай начнем, ты будешь общаться с {name}")
         await safe_send_message(bot, message, f_m)
         await state.update_data({'first': False})
         return
@@ -240,7 +241,7 @@ async def gpt_handler_second(message: Message, state: FSMContext):
     else:
         return
     thread_id = await user.thread_q2
-    msg = await gpt_assystent_mes(thread_id, '', user_message)
+    msg = await gpt_assystent_mes(thread_id, 'asst_k6tL6xds8nSVBOehcdIFzqee', user_message)
     break_state = msg.find('{') + msg.find('}') != -2
     if break_state:
         prompt = await clean_prompt(msg)
@@ -264,6 +265,7 @@ async def gpt_handler_finish(message: Message, state: FSMContext):
         await state.set_state(QuestState.second_quest)
     else:
         await safe_send_message(bot, message, "все круто")
+        await update_user(message.from_user.id, {'is_active': True})
         await state.clear()
 
 

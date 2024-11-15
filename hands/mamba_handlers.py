@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 import time
+from selenium.webdriver.remote.webelement import WebElement
 from webdriver_manager.chrome import ChromeDriverManager
 
 from brain.brain import check_dialog, read_msg, write_msg
@@ -124,34 +125,41 @@ async def mamba_dialogs_handler(driver, wait, user_id):
 
 
 @webscrab_error_handler
-async def mamba_dialog_to_data_handler(driver, wait, dialog, parsed_dialogs: list):
+async def mamba_dialog_to_data_handler(driver, wait, dialog):
     dialog.click()
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
     time.sleep(10)
     messages = driver.find_elements(By.XPATH, '//span[@data-name="message-text"]')
 
-    # TODO: parse dialogs to json
-    data = ''
+    data = {'messages': []}
+    for msg in messages:
+        data['messages'].append({'sender': ("собеседник" if msg.location['x'] < 1000 else "пользователь"), 'text': msg.text})
 
-    parsed_dialogs.append(dialog)
-    return parsed_dialogs, data
+    return data
 
 
 @webscrab_error_handler
 async def mamba_dialogs_to_data_handler(driver, wait):
     parsed_dialogs = []
+    data = []
     while True:
         time.sleep(20)
         await close_popup(driver)
-        read_dialogs = driver.find_elements(By.XPATH, '//a[not(.//div[@data-name="counter-unread-message"])]')
+        all_dialogs = driver.find_elements(By.XPATH,
+                                        '//a[contains(@class, "sc-qyouz1-0") and contains(@class, "sc-1psbcvc-0") and '
+                                        'contains(@class, "bcCKMU") and contains(@class, "eRGrrJ")]')
+        unread_dialogs = driver.find_elements(By.XPATH, '//a[.//div[@data-name="counter-unread-message"]]')
+        read_dialogs = list(set(all_dialogs) - set(unread_dialogs))
         # print(f"Количество непрочитанных диалогов: {len(unread_dialogs)}")
         read_dialogs = list(set(read_dialogs) - set(parsed_dialogs))
 
         if not read_dialogs:
-            # print("Hет непрочитанных диалогов.")
+            # print("Hет прочитанных диалогов.")
             break
 
-        dialog = read_dialogs[0]
-        parsed_dialogs, data = await mamba_dialog_to_data_handler(driver, wait, dialog, parsed_dialogs)
+        dialog: WebElement = read_dialogs[0]
+        cur_data = await mamba_dialog_to_data_handler(driver, wait, dialog)
+        parsed_dialogs.append(dialog)
+        data.append(cur_data)
 
-        return data
+    return data

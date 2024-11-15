@@ -7,6 +7,7 @@ import sys
 from aiogram.client.bot import DefaultBotProperties
 import logging
 import asyncio
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 sys.path.append(os.path.join(sys.path[0], 'k_bot'))
 
@@ -34,3 +35,6 @@ event = asyncio.Event()
 
 token = os.getenv('TOKEN_API_GPT')
 client = OpenAI(api_key=token)
+
+scheduler = AsyncIOScheduler()
+

@@ -28,16 +28,8 @@ class User(Base):
     cur_service = Column(String, default='')
     is_quested1 = Column(Boolean, default=False)
     is_quested2 = Column(Boolean, default=False)
-    # is_active = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=False)
     is_superuser = Column(Boolean, default=False)
-
-
-class SecondPerson(Base):
-    __tablename__ = "second_person"
-
-    id = Column(BigInteger, primary_key=True, index=True, nullable=False)  # autoincrement=True надо придумать как им давать индексы
-    info = Column(String, default='')
-    status = Column(String, default='')  # TODO: start state
 
 
 class Dialogs(Base):
@@ -45,7 +37,6 @@ class Dialogs(Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, ForeignKey("user.id"), nullable=False)
-    # second_person_id = Column(BigInteger, ForeignKey("second_person.id"), nullable=False)
     thread_brain = Column(String, default='')
     thread_def = Column(String, default='')
     status = Column(String, default='in_p')  # in_p, banned, approved

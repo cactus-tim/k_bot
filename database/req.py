@@ -1,14 +1,36 @@
 from sqlalchemy import select, desc, distinct, and_
 
-from database.models import User, SecondPerson, Dialogs, Proxy, Accs, async_session
-from errors.errors import Error404, Error409
+from database.models import User, Dialogs, Proxy, Accs, async_session
+from errors.errors import Error404, Error409, ContentError
 from instance import client
-from errors.error_handlers import db_error_handler
+from errors.error_handlers import db_error_handler, gpt_error_handler
 
 
+@gpt_error_handler
 async def create_thread():
     thread = client.beta.threads.create()
     return thread.id
+
+
+@gpt_error_handler
+async def initialize_dialog(assistant_id, thread_id, mes):
+    message = client.beta.threads.messages.create(
+        thread_id=thread_id,
+        role="user",
+        content=mes
+    )
+
+    run = client.beta.threads.runs.create_and_poll(
+        thread_id=thread_id,
+        assistant_id=assistant_id,
+    )
+
+    messages = client.beta.threads.messages.list(thread_id=thread_id)
+    data = messages.data[0].content[0].text.value.strip()
+    if not data:
+        raise ContentError
+    else:
+        return data
 
 
 @db_error_handler
@@ -56,37 +78,6 @@ async def get_all_users_ids():
         if not users_tg_ids:
             raise Error404
         return users_tg_ids
-
-
-@db_error_handler
-async def get_s_p(id: int):
-    async with async_session() as session:
-        s_p = await session.scalar(select(SecondPerson).where(SecondPerson.id == id))
-        if s_p:
-            return s_p
-        else:
-            return "not created"
-
-
-@db_error_handler
-async def create_s_p(data:dict):
-    async with async_session() as session:
-        s_p_data = SecondPerson(**data)
-        session.add(s_p_data)
-        await session.commit()
-
-
-@db_error_handler
-async def update_s_p(id: int, data: dict):
-    async with async_session() as session:
-        s_p = await get_s_p(id)
-        if s_p == 'not created':
-            raise Error404
-        else:
-            for key, value in data.items():
-                setattr(s_p, key, value)
-            session.add(s_p)
-            await session.commit()
 
 
 @db_error_handler
@@ -222,6 +213,10 @@ async def del_acc(tg_id: int, service: str):
             return "ok"
 
 
+async def get_all_accs():
+    pass
+
+
 @db_error_handler
 async def get_dialog(dialog_id: int):
     async with async_session() as session:
@@ -236,13 +231,13 @@ async def get_dialog(dialog_id: int):
 async def create_dialog(dialog_id: int, user_id: int):
     async with async_session() as session:
         dialog = await get_dialog(dialog_id)
+        user = await get_user(user_id)
         data = {}
         if dialog == 'not created':
             data['user_id'] = user_id
             data['thread_brain'] = await create_thread()
-            # TODO: initialize dialog
             data['thread_def'] = await create_thread()
-            # TODO: initialize dialog
+            await initialize_dialog(user.def_id, data['thread_def'], "Давай начнем оценивать сообщения")
             dialog_data = Dialogs(**data)
             session.add(dialog_data)
             await session.commit()

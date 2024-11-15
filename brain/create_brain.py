@@ -44,7 +44,7 @@ async def make_prompt_for_def(prompt: str):
 
 
 @gpt_error_handler
-async def create_brain(user_id, prompt):  # TODO: mechanic of multimessage and minimalize questions
+async def create_brain(user_id, prompt):
     dialogs = await mamba_parsing_dialogs(user_id)
     filename = "dialogs.txt"
     with open(filename, "wb") as file:
