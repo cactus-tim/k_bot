@@ -1,7 +1,7 @@
 import asyncio
 
 from database.req import get_acc
-from mamba_handlers import create_con, close_con, mamba_login, mamba_dialogs_handler, proxy_initialization, \
+from hands.mamba_handlers import create_con, close_con, mamba_login, mamba_dialogs_handler, proxy_initialization, \
     mamba_dialogs_to_data_handler
 
 
@@ -32,5 +32,5 @@ async def mamba_parsing_dialogs(user_id: int):
     dialogs = await mamba_dialogs_to_data_handler(driver, wait)
 
     await close_con()
-    return dialogs
+    return str(dialogs)
 

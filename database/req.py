@@ -3,7 +3,7 @@ from sqlalchemy import select, desc, distinct, and_
 from database.models import User, Dialogs, Proxy, Accs, async_session
 from errors.errors import Error404, Error409, ContentError
 from instance import client
-from errors.error_handlers import db_error_handler, gpt_error_handler
+from bot.handlers.errors import gpt_error_handler, db_error_handler
 
 
 @gpt_error_handler

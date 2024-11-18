@@ -8,9 +8,9 @@ import time
 from selenium.webdriver.remote.webelement import WebElement
 from webdriver_manager.chrome import ChromeDriverManager
 
-from brain.brain import check_dialog, read_msg, write_msg
+from brains.brain import check_dialog, read_msg, write_msg
 from database.req import get_proxy_by_id, get_best_proxy, update_acc, get_dialog
-from errors.error_handlers import webscrab_error_handler
+from bot.handlers.errors import webscrab_error_handler
 from errors.errors import ProxyError
 
 

@@ -8,9 +8,8 @@ from aiogram.fsm.state import State, StatesGroup
 
 from bot.handlers.errors import safe_send_message
 from database.req import get_user, update_user
-from hands.hands import mamba_parsing_dialogs
 from instance import client, bot
-from errors.error_handlers import gpt_error_handler
+from bot.handlers.errors import gpt_error_handler
 from errors.errors import ContentError, FileError
 
 
@@ -44,8 +43,7 @@ async def make_prompt_for_def(prompt: str):
 
 
 @gpt_error_handler
-async def create_brain(user_id, prompt):
-    dialogs = await mamba_parsing_dialogs(user_id)
+async def create_brain(user_id, prompt, dialogs):
     filename = "dialogs.txt"
     with open(filename, "wb") as file:
         file.write(dialogs.encode())

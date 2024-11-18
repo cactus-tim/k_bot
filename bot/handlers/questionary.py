@@ -10,8 +10,10 @@ from instance import bot, client
 from database.req import get_user, update_user
 from bot.handlers.errors import safe_send_message
 from database.models import User
-from brain.create_brain import create_brain, create_def, update_def, update_data
-from brain.brain import gpt_assystent_mes
+from brains.create_brain import create_brain, create_def, update_def, update_data
+from hands.hand import mamba_parsing_dialogs
+from bot.handlers.errors import gpt_assystent_mes
+
 
 router = Router()
 
@@ -125,7 +127,7 @@ async def get_new_thread(message: Message, state: FSMContext):
 async def give_new_thread(message: Message, state: FSMContext):
     if message.text == "Первую" or message.text == "Обе":
         user = await get_user(message.from_user.id)
-        if not check_services_good(user):
+        if not await check_services_good(user):
             return
         thread = client.beta.threads.create()
         thread_id = thread.id
@@ -145,7 +147,7 @@ async def give_new_thread(message: Message, state: FSMContext):
 async def start_query(callback: F.CallbackQuery, state: FSMContext):
     await callback.message.delete()
     user = await get_user(callback.from_user.id)
-    if not check_services_good(user):
+    if not await check_services_good(user):
         return
     if user.thread_q1 == '':
         thread = client.beta.threads.create()
@@ -180,14 +182,21 @@ async def gpt_handler_first(message: Message, state: FSMContext):
         user_message = message.text
     else:
         return
-    thread_id = await user.thread_q1
+    thread_id = user.thread_q1
     msg = await gpt_assystent_mes(thread_id, 'asst_YIrqaeL1mUSgcwqDHDBZUJTq', user_message)
     break_state = msg.find('{') + msg.find('}') != -2
     if break_state:
+        bot_msg = await safe_send_message(bot, message, "Идет парсинг диалогов для настройке вашего персонального ИИ, "
+                                                        "пожалуйста подождите")
+        # dialogs = await mamba_parsing_dialogs(message.from_user.id)
+        dialogs = 'пропустим этото этап и сразу перейдем к промпту'  # to del
+        msg = await gpt_assystent_mes(thread_id, 'asst_YIrqaeL1mUSgcwqDHDBZUJTq', dialogs)
         prompt = await clean_prompt(msg)
-        await create_brain(user_id, prompt)
+        dialogs = 'some shit'  # to del
+        await create_brain(user_id, prompt, dialogs)
+        await bot_msg.delete()
         await safe_send_message(bot, message, "Отлично, мы собрали необходимую информацию!\n"
-                                              "Настраиваем ИИ под вас.")
+                                              "Напишите любое сообщение, что бы продолжить.")
         await state.update_data({'first': True})
         data = await state.get_data()
         if data.get("only_one"):
@@ -216,7 +225,7 @@ async def gpt_handler_second(message: Message, state: FSMContext):
 
         thread_name = client.beta.threads.create()
         name = await gpt_assystent_mes(thread_name.id, user.brain_id, "Как тебя зовут? Напиши только имя, больше ничего")
-        await update_user(user_id, {"name": name})
+        await update_user(user_id, {"name": (name[:-1] if name[-1] == '.' else name)})
         f_m = await gpt_assystent_mes(thread_id, assistant_id='asst_k6tL6xds8nSVBOehcdIFzqee', mes=f"Давай начнем, ты будешь общаться с {name}")
         await safe_send_message(bot, message, f_m)
         await state.update_data({'first': False})
@@ -240,7 +249,7 @@ async def gpt_handler_second(message: Message, state: FSMContext):
         user_message = message.text
     else:
         return
-    thread_id = await user.thread_q2
+    thread_id = user.thread_q2
     msg = await gpt_assystent_mes(thread_id, 'asst_k6tL6xds8nSVBOehcdIFzqee', user_message)
     break_state = msg.find('{') + msg.find('}') != -2
     if break_state:
@@ -267,33 +276,3 @@ async def gpt_handler_finish(message: Message, state: FSMContext):
         await safe_send_message(bot, message, "все круто")
         await update_user(message.from_user.id, {'is_active': True})
         await state.clear()
-
-
-class UpdateDefState(StatesGroup):
-    waiting_user_op = State()
-
-
-async def update_def_part_1(user_id, mes, rate, state: FSMContext):
-    message = (f"Я получила вот такое сообщение от ползователя:\n\n{mes}\n\n"
-               f"Я его оцниваю как {rate} по шкале от 1 до 10, где 10 - полное соответсвие твоей системе ред флагов\n"
-               f"А что думаешь ты?\n"
-               f"Оцени его от 1 до 10 и отправь мне только число")
-    await safe_send_message(bot, user_id, message)
-    await state.update_data({
-        'mes': mes,
-        'rate': rate
-    })
-    await state.set_state(UpdateDefState.waiting_user_op)
-
-
-@router.message(UpdateDefState.waiting_user_op)
-async def update_def_part_2(message: Message, state: FSMContext):
-    if not is_number_in_range(message.text):
-        await safe_send_message(bot, message, "Можно отправить только число от 1 до 10!")
-        return
-    data = await state.get_data()
-    mes = data.get("mes")
-    rate = data.get("rate")
-    await update_def(message.from_user.id, mes, rate, int(message.text))
-    await safe_send_message(bot, message, "Спасибо!")
-    await state.clear()

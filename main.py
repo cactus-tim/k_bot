@@ -1,23 +1,21 @@
 import asyncio
-import logging
 import time
 from random import randint
 
 from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from confige import BotConfig
-from datetime import datetime, timedelta
 from pytz import timezone
 
 from database.req import get_all_accs, get_user
-from hands.hands import mamba_hand
+from hands.hand import mamba_hand
 from instance import bot, scheduler
-from bot.handlers import user, errors, questionary, admin
+from bot.handlers import user, errors, questionary, admin, def_update
 from database.models import async_main
 
 
 def register_routers(dp: Dispatcher) -> None:
-    dp.include_routers(user.router, errors.router, questionary.router, admin.router)
+    dp.include_routers(user.router, errors.router, questionary.router, admin.router, def_update.router)
 
 
 async def loop():
@@ -46,10 +44,8 @@ async def main() -> None:
     scheduler.add_job(loop, 'cron', hour=19, minute=5, id='loop', timezone=timezone('Europe/Moscow'))
     scheduler.add_job(loop, 'cron', hour=23, minute=11, id='loop', timezone=timezone('Europe/Moscow'))
 
-
-
     try:
-        scheduler.start()
+        # scheduler.start()
         await dp.start_polling(bot, skip_updates=True)
     except Exception as _ex:
         print(f'Exception: {_ex}')
