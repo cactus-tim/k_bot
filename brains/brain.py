@@ -25,13 +25,17 @@ async def is_number_in_range(s):
     except ValueError:
         return False
 
+# 483458201,Тима.,"",asst_GGgV1EmufFpvznAIv7JUpDpf,asst_jgpGLwFfqM4IciACwM0HBFZJ,thread_WwexkrdWJggDAMCRsYz9YQyi,thread_TTnNts6PM5AKmZBVJJDW4cFC,{Mamba},"",true,true,true,true
+# 3,483458201,1,mamba,lida.aiseller@gmail.com,T37RrMDT
+# 1,gggg:gggg,0,0,true
+
 
 async def check_dialog(dialog_id, user_id):
     dialog = await get_dialog(dialog_id)
     if dialog == "not created":
         await create_dialog(dialog_id, user_id)
         dialog = await get_dialog(dialog_id)
-    if dialog.status == "banned" or dialog.status == "banned":
+    if dialog.status == "banned" or dialog.status == "approved":
         return False
     return True
 
@@ -68,7 +72,7 @@ async def read_msg(dialog_id, msg):
     dialog = await get_dialog(dialog_id)
     user = await get_user(dialog.user_id)
     for m in msg.split('\n'):
-        ans = await gpt_assystent_mes(dialog_id.thread_def, user.def_id, m)
+        ans = await gpt_assystent_mes(dialog.thread_def, user.def_id, m)
         if not is_number_in_range(ans):
             raise NumberError(dialog.user_id, dialog_id)
         rate = int(ans)

@@ -213,8 +213,14 @@ async def del_acc(tg_id: int, service: str):
             return "ok"
 
 
+@db_error_handler
 async def get_all_accs():
-    pass
+    async with async_session() as session:
+        accs = await session.execute(select(Accs))
+        acc_tg_ids = accs.scalars().all()
+        if not acc_tg_ids:
+            raise Error404
+        return acc_tg_ids
 
 
 @db_error_handler
@@ -234,6 +240,7 @@ async def create_dialog(dialog_id: int, user_id: int):
         user = await get_user(user_id)
         data = {}
         if dialog == 'not created':
+            data['id'] = dialog_id
             data['user_id'] = user_id
             data['thread_brain'] = await create_thread()
             data['thread_def'] = await create_thread()

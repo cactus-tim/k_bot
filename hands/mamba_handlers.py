@@ -7,11 +7,25 @@ from selenium.webdriver.chrome.options import Options
 import time
 from selenium.webdriver.remote.webelement import WebElement
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
+
 
 from brains.brain import check_dialog, read_msg, write_msg
 from database.req import get_proxy_by_id, get_best_proxy, update_acc, get_dialog
 from bot.handlers.errors import webscrab_error_handler
 from errors.errors import ProxyError
+
+
+@webscrab_error_handler
+async def scroll_to_bottom(driver):
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    while True:
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(2)
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break
+        last_height = new_height
 
 
 async def close_popup(driver):
@@ -57,6 +71,11 @@ async def close_con(driver):
     driver.quit()
 
 
+async def captcha_close():
+    # TODO: implement
+    pass
+
+
 @webscrab_error_handler
 async def mamba_login(driver, wait, username, pas):
     driver.get("https://www.mamba.ru/ru/login")
@@ -80,7 +99,7 @@ async def mamba_dialog_handler(driver, wait, dialog, user_id):
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
     time.sleep(10)
     current_url = driver.current_url
-    dialog_id = current_url.split('/')[-2]
+    dialog_id = int(current_url.split('/')[-2])
     if not await check_dialog(dialog_id, user_id):
         return
     dialog_struct = await get_dialog(dialog_id)
@@ -133,33 +152,48 @@ async def mamba_dialog_to_data_handler(driver, wait, dialog):
 
     data = {'messages': []}
     for msg in messages:
-        data['messages'].append({'sender': ("собеседник" if msg.location['x'] < 1000 else "пользователь"), 'text': msg.text})
+        if msg.text == "Привет! Похоже, что мы понравились друг другу. Давай пообщаемся!":
+            continue
+        data['messages'].append(
+            {'sender': ("собеседник" if msg.location['x'] < 1000 else "пользователь"), 'text': msg.text})
 
     return data
 
 
 @webscrab_error_handler
 async def mamba_dialogs_to_data_handler(driver, wait):
-    parsed_dialogs = []
+    # TODO: need optimize func and make better
+    parsed_hrefs = []
     data = []
+
     while True:
-        time.sleep(20)
-        await close_popup(driver)
-        all_dialogs = driver.find_elements(By.XPATH,
-                                        '//a[contains(@class, "sc-qyouz1-0") and contains(@class, "sc-1psbcvc-0") and '
-                                        'contains(@class, "bcCKMU") and contains(@class, "eRGrrJ")]')
-        unread_dialogs = driver.find_elements(By.XPATH, '//a[.//div[@data-name="counter-unread-message"]]')
-        read_dialogs = list(set(all_dialogs) - set(unread_dialogs))
-        # print(f"Количество непрочитанных диалогов: {len(unread_dialogs)}")
-        read_dialogs = list(set(read_dialogs) - set(parsed_dialogs))
+        try:
+            await scroll_to_bottom(driver)
+            await close_popup(driver)
 
-        if not read_dialogs:
-            # print("Hет прочитанных диалогов.")
-            break
+            all_dialogs = driver.find_elements(By.XPATH,
+                                               '//a[contains(@class, "sc-qyouz1-0") and contains(@class, "sc-1psbcvc-0") and contains(@class, "bcCKMU") and contains(@class, "eRGrrJ")]')
+            unread_dialogs = driver.find_elements(By.XPATH, '//a[.//div[@data-name="counter-unread-message"]]')
 
-        dialog: WebElement = read_dialogs[0]
-        cur_data = await mamba_dialog_to_data_handler(driver, wait, dialog)
-        parsed_dialogs.append(dialog)
-        data.append(cur_data)
+            all_hrefs = {d.get_attribute('href') for d in all_dialogs}
+            unread_hrefs = {d.get_attribute('href') for d in unread_dialogs}
+            read_hrefs = list(all_hrefs - unread_hrefs - set(parsed_hrefs))
+
+            if not read_hrefs:
+                print("Нет новых прочитанных диалогов.")
+                break
+
+            read_dialogs = [
+                dialog for dialog in all_dialogs
+                if dialog.get_attribute('href') in read_hrefs
+            ]
+
+            cur_data = await mamba_dialog_to_data_handler(driver, wait, read_dialogs[0])
+            parsed_hrefs.append(read_dialogs[0].get_attribute('href'))
+            data.append(cur_data)
+        except StaleElementReferenceException:
+            print("Обнаружено StaleElementReferenceException. Перезагрузка страницы...")
+            driver.refresh()
+            time.sleep(20)
 
     return data

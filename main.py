@@ -19,7 +19,7 @@ def register_routers(dp: Dispatcher) -> None:
 
 
 async def loop():
-    time.sleep(randint(0, 52431))
+    # time.sleep(randint(0, 52431))
     accs = await get_all_accs()
     for acc in accs:
         user = await get_user(acc.user_id)
@@ -45,6 +45,7 @@ async def main() -> None:
     scheduler.add_job(loop, 'cron', hour=23, minute=11, id='loop', timezone=timezone('Europe/Moscow'))
 
     try:
+        await loop()
         # scheduler.start()
         await dp.start_polling(bot, skip_updates=True)
     except Exception as _ex:

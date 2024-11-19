@@ -72,8 +72,8 @@ async def add_acc(message: Message, state: FSMContext):
 # @router.callback_query(F.data in ["mamba"])  # you can add here more callback data with services names
 @router.message(AccState.waiting_service)
 async def add_acc_part_2(message: Message, state: FSMContext):
-    await update_user(message.from_user.id, {'cur_service': message.text})
-    await create_acc(message.from_user.id, message.text)
+    await update_user(message.from_user.id, {'cur_service': message.text.lower()})
+    await create_acc(message.from_user.id, message.text.lower())
     await safe_send_message(bot, message, text="Теперь отправьте логин от аккаунта в формате.\n"
                                                "Логин:*ваш логин*")
     await state.set_state(AccState.waiting_mail)
@@ -82,7 +82,7 @@ async def add_acc_part_2(message: Message, state: FSMContext):
 @router.message(AccState.waiting_mail)
 async def add_acc_part_3(message: Message, state: FSMContext):
     user = await get_user(message.from_user.id)
-    login = message.text[6:].strip() if message.text[:6].strip() == 'Пароль:' else message.text.strip()
+    login = message.text[6:].strip() if message.text[:6].strip() == 'Логин:' else message.text.strip()
     await update_acc(message.from_user.id, user.cur_service, {"login": login})
     await safe_send_message(bot, message, text="Теперь отправьте пароль от аккаунта в формате.\n"
                                                "Пароль:*ваш пароль*")

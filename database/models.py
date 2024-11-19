@@ -35,7 +35,7 @@ class User(Base):
 class Dialogs(Base):
     __tablename__ = "dialogs"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, primary_key=True)
     user_id = Column(BigInteger, ForeignKey("user.id"), nullable=False)
     thread_brain = Column(String, default='')
     thread_def = Column(String, default='')

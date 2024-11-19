@@ -215,7 +215,7 @@ async def gpt_handler_second(message: Message, state: FSMContext):
     data = await state.get_data()
     flag = data.get("first")
     if flag:
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)  # TODO: need to test
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
         if user.thread_q2 == '':
             thread = client.beta.threads.create()
             thread_id = thread.id
@@ -264,7 +264,7 @@ async def gpt_handler_second(message: Message, state: FSMContext):
 
 @router.message(QuestState.finish_quest)
 async def gpt_handler_finish(message: Message, state: FSMContext):
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)  # TODO: need to test
+    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
     user = await get_user(message.from_user.id)
     if user.brain_id == '' or not user.is_quested1:
         await safe_send_message(bot, message, "надо перепройти первую часть анкеты, там что то пошло не по плану")

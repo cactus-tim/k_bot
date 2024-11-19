@@ -11,13 +11,13 @@ async def mamba_hand(user_id: int):
 
     driver, wait = await create_con(options)
 
-    login = "lida.aiseller@gmail.com"  # acc.login
-    password = "T37RrMDT"  # acc.password
+    login = acc.login
+    password = acc.password
     await mamba_login(driver, wait, login, password)
 
     await mamba_dialogs_handler(driver, wait, user_id)
 
-    await close_con()
+    await close_con(driver)
 
 
 async def mamba_parsing_dialogs(user_id: int):
@@ -31,6 +31,6 @@ async def mamba_parsing_dialogs(user_id: int):
 
     dialogs = await mamba_dialogs_to_data_handler(driver, wait)
 
-    await close_con()
+    await close_con(driver)
     return str(dialogs)
 
