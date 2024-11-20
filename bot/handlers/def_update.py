@@ -2,7 +2,10 @@ from aiogram import Router
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.storage.base import StorageKey
+from aiogram.fsm.storage.memory import MemoryStorage
 
+from database.req import get_dialog
 from instance import bot
 from bot.handlers.errors import safe_send_message
 from brains.create_brain import update_def
@@ -19,11 +22,20 @@ async def is_number_in_range(s):
         return False
 
 
+async def trigger_update_def_part_1(user_id, msg, rate):
+    storage = MemoryStorage()
+    state = FSMContext(storage=storage, key=StorageKey(bot_id=bot.id, chat_id=user_id, user_id=user_id))
+    await update_def_part_1(user_id, msg, rate, state)
+
+
 class UpdateDefState(StatesGroup):
     waiting_user_op = State()
 
 
-async def update_def_part_1(user_id, mes, rate, state: FSMContext):
+async def update_def_part_1(user_id, mes, rate, state):
+    # как изменить: попробуй просто отправлять сообщение, а вот дату вметсо переменной состояния закидывать в бдшку
+    # и там уже что то можно придумать (из лиды знаем как такие записи извлекать из бд,
+    # и как раз по этой логике дергать обновление)
     message = (f"Я получила вот такое сообщение от ползователя:\n\n{mes}\n\n"
                f"Я его оцниваю как {rate} по шкале от 1 до 10, где 10 - полное соответсвие твоей системе ред флагов\n"
                f"А что думаешь ты?\n"

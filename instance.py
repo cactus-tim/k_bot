@@ -20,7 +20,8 @@ bot = Bot(
     token=token,
     default=DefaultBotProperties(
         parse_mode=ParseMode.HTML
-    )
+    ),
+    timeout=10  # TODO: delete after tests
 )
 
 logging.basicConfig(

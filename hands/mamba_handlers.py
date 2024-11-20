@@ -62,6 +62,7 @@ async def create_con(options):
     chrome_driver_path = "/Users/timofejsosnin/PycharmProjects/k_bot/k_bot/hands/chromedriver"
     service = Service(chrome_driver_path)
     driver = webdriver.Chrome(service=service)  # webdriver.Chrome(service=service, options=options)
+    driver.implicitly_wait(10)  # TODO: delete after tests
     wait = WebDriverWait(driver, 10)
     return driver, wait
 

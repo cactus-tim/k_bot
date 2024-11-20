@@ -45,9 +45,13 @@ async def main() -> None:
     scheduler.add_job(loop, 'cron', hour=23, minute=11, id='loop', timezone=timezone('Europe/Moscow'))
 
     try:
-        await loop()
+        await asyncio.gather(
+            dp.start_polling(bot, skip_updates=True),
+            loop()
+        )
+        # await loop()
         # scheduler.start()
-        await dp.start_polling(bot, skip_updates=True)
+        # await dp.start_polling(bot, skip_updates=True)
     except Exception as _ex:
         print(f'Exception: {_ex}')
 
