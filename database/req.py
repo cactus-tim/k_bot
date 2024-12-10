@@ -81,9 +81,9 @@ async def get_all_users_ids():
 
 
 @db_error_handler
-async def get_proxy_by_proxy(proxy: str):
+async def get_proxy_by_host(proxy: str):
     async with async_session() as session:
-        proxyy = await session.scalar(select(Proxy).where(Proxy.proxy == proxy))
+        proxyy = await session.scalar(select(Proxy).where(Proxy.host == proxy))
         if proxyy:
             return proxyy
         else:
@@ -91,12 +91,16 @@ async def get_proxy_by_proxy(proxy: str):
 
 
 @db_error_handler
-async def create_proxy(proxy_d: str):
+async def create_proxy(proxy_row: str):
     async with async_session() as session:
-        proxy = await get_proxy_by_proxy(proxy_d)
+        proxy_row_list = proxy_row.split(':')
+        proxy = await get_proxy_by_host(f"{proxy_row_list[0]}:{proxy_row_list[1]}")
         data = {}
         if proxy == 'not created':
-            data['proxy'] = proxy_d
+            proxy_row_list = proxy_row.split(':')
+            data['host'] = f"{proxy_row_list[0]}:{proxy_row_list[1]}"
+            data['login'] = proxy_row_list[2]
+            data['password'] = proxy_row_list[3]
             proxy_data = Proxy(**data)
             session.add(proxy_data)
             await session.commit()
@@ -105,9 +109,10 @@ async def create_proxy(proxy_d: str):
 
 
 @db_error_handler
-async def update_proxy(proxy_d: str, data: dict):
+async def update_proxy(proxy_row: str, data: dict):
     async with async_session() as session:
-        proxy = await get_proxy_by_proxy(proxy_d)
+        proxy_row_list = proxy_row.split(':')
+        proxy = await get_proxy_by_host(f"{proxy_row_list[0]}:{proxy_row_list[1]}")
         if proxy == 'not created':
             raise Error404
         else:
@@ -130,7 +135,7 @@ async def get_proxy_by_id(proxy_id: int):
 @db_error_handler
 async def get_proxy_id_by_proxy(proxy: str):
     async with async_session() as session:
-        proxyy = await session.scalar(select(Proxy).where(Proxy.proxy == proxy))
+        proxyy = await session.scalar(select(Proxy).where(Proxy.host == proxy))
         if proxyy:
             return proxyy.id
         else:
@@ -148,9 +153,10 @@ async def get_best_proxy():
 
 
 @db_error_handler
-async def del_proxy(proxy_d: str):
+async def del_proxy(proxy_row: str):
     async with async_session() as session:
-        proxy = await get_proxy_by_proxy(proxy_d)
+        proxy_row_list = proxy_row.split(':')
+        proxy = await get_proxy_by_host(f"{proxy_row_list[0]}:{proxy_row_list[1]}")
         if proxy == "not created":
             raise Error409
         else:
@@ -263,3 +269,27 @@ async def update_dialog(dialog_id: int, data: dict):
                 setattr(dialog, key, value)
             session.add(dialog)
             await session.commit()
+
+
+async def get_upd():
+    pass
+
+
+async def create_upd():
+    pass
+
+
+async def del_upd():
+    pass
+
+
+async def get_upd_wait():
+    pass
+
+
+async def create_upd_wait():
+    pass
+
+
+async def del_upd_wait():
+    pass

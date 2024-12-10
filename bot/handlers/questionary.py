@@ -224,7 +224,7 @@ async def gpt_handler_second(message: Message, state: FSMContext):
             thread_id = user.thread_q2
 
         thread_name = client.beta.threads.create()
-        name = await gpt_assystent_mes(thread_name.id, user.brain_id, "Как тебя зовут? Напиши только имя, больше ничего")
+        name = await gpt_assystent_mes(thread_name.id, user.brain_id, "Как тебя зовут? ответь мне одним словом - именем")
         await update_user(user_id, {"name": (name[:-1] if name[-1] == '.' else name)})
         f_m = await gpt_assystent_mes(thread_id, assistant_id='asst_k6tL6xds8nSVBOehcdIFzqee', mes=f"Давай начнем, ты будешь общаться с {name}")
         await safe_send_message(bot, message, f_m)
@@ -256,7 +256,8 @@ async def gpt_handler_second(message: Message, state: FSMContext):
         prompt = await clean_prompt(msg)
         await create_def(user_id, prompt)
         await safe_send_message(bot, message, "Отлично, мы собрали необходимую информацию!\n"
-                                              "Донастраиваем ИИ под вас.")
+                                              "Донастраиваем ИИ под вас.\n"
+                                              "Напишите любое сообщение, что бы продолжить.")
         await state.set_state(QuestState.finish_quest)
     else:
         await safe_send_message(bot, message, msg)

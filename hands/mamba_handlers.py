@@ -1,3 +1,7 @@
+import contextlib
+import tempfile
+from urllib.parse import urlparse
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -5,6 +9,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 import time
+import zipfile
 from selenium.webdriver.remote.webelement import WebElement
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
@@ -57,13 +62,49 @@ async def proxy_initialization(user_id, proxy_id):
     return chrome_options
 
 
+class ChromeExtended(webdriver.Chrome):
+    def __init__(self, *args, options=None, proxy=None, **kwargs):
+        options = options or Options()
+
+        options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+
+        if proxy:
+            context = tempfile.TemporaryDirectory()
+        else:
+            context = contextlib.nullcontext()
+
+        with context as extensionDirpath:
+            self._setupProxy(extensionDirpath, proxy, options)
+
+            service = Service('/Users/timofejsosnin/.wdm/drivers/chromedriver/mac64/131.0.6778.85/chromedriver-mac-arm64/chromedriver')
+            super().__init__(*args, options=options, service=service, **kwargs)
+
+    def _setupProxy(self, extensionDirpath, proxy, options):
+        if not proxy:
+            return
+
+        parsedProxy = urlparse(proxy)
+
+        manifest_json = '{"version":"1.0.0","manifest_version":2,"name":"Chrome Proxy","permissions":["proxy","tabs","unlimitedStorage","storage","<all_urls>","webRequest","webRequestBlocking"],"background":{"scripts":["background.js"]},"minimum_chrome_version":"22.0.0"}'
+        background_js = 'var e={mode:"fixed_servers",rules:{singleProxy:{scheme:"%s",host:"%s",port:parseInt(%s)},bypassList:["localhost"]}};chrome.proxy.settings.set({value:e,scope:"regular"},(function(){})),chrome.webRequest.onAuthRequired.addListener((function(e){return{authCredentials:{username:"%s",password:"%s"}}}),{urls:["<all_urls>"]},["blocking"]);' \
+            % (parsedProxy.scheme, parsedProxy.hostname, parsedProxy.port, parsedProxy.username, parsedProxy.password)
+
+        with open(f"{extensionDirpath}/manifest.json", "w", encoding="utf8") as f:
+            f.write(manifest_json)
+        with open(f"{extensionDirpath}/background.js", "w", encoding="utf8") as f:
+            f.write(background_js)
+
+        options.add_argument(f"--load-extension={extensionDirpath}")
+
+
 @webscrab_error_handler
-async def create_con(options):
-    chrome_driver_path = "/Users/timofejsosnin/PycharmProjects/k_bot/k_bot/hands/chromedriver"
-    service = Service(chrome_driver_path)
-    driver = webdriver.Chrome(service=service)  # webdriver.Chrome(service=service, options=options)
+async def create_con(proxy=None):
+    driver = ChromeExtended(proxy)
     driver.implicitly_wait(10)  # TODO: delete after tests
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 30)
     return driver, wait
 
 
@@ -98,7 +139,7 @@ async def mamba_dialog_handler(driver, wait, dialog, user_id):
     unread_count = int(dialog.find_element(By.XPATH, './/span[@class="sc-d27dsj-0 fujUOM"]').text)
     dialog.click()
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
-    time.sleep(10)
+    time.sleep(20)
     current_url = driver.current_url
     dialog_id = int(current_url.split('/')[-2])
     if not await check_dialog(dialog_id, user_id):

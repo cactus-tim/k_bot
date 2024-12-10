@@ -18,7 +18,7 @@ from errors.errors import ContentError, FileError, NumberError
 async def is_number_in_range(s):
     try:
         num = float(s)
-        return 1 <= num <= 10
+        return 0 <= num <= 10
     except ValueError:
         return False
 

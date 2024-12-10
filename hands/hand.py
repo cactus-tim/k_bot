@@ -1,15 +1,17 @@
 import asyncio
 
-from database.req import get_acc
+from database.req import get_acc, get_proxy_by_id
 from hands.mamba_handlers import create_con, close_con, mamba_login, mamba_dialogs_handler, proxy_initialization, \
     mamba_dialogs_to_data_handler
 
 
 async def mamba_hand(user_id: int):
     acc = await get_acc(user_id, "mamba")
-    options = ''  # await proxy_initialization(acc.proxy_id)
+    # proxy = f"http://GXjt8nK3:ghhPdd4C@85.142.47.227:62608"
+    proxy = await get_proxy_by_id(acc.proxy_id)
+    proxy_ready = f"http://{proxy.login}:{proxy.password}@{proxy.host}"
 
-    driver, wait = await create_con(options)
+    driver, wait = await create_con()  # proxy_ready)
 
     login = acc.login
     password = acc.password

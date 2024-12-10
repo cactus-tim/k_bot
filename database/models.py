@@ -32,6 +32,23 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
 
 
+class Upd(Base):
+    __tablename__ = 'upd'
+
+    id = Column(BigInteger, primary_key=True, index=True, nullable=False)
+    mes = Column(String, default='')
+    rate = Column(Integer, default=0)
+
+
+class UpdWait(Base):
+    __tablename__ = 'upd_wait'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, primary_key=True, index=True, nullable=False)
+    mes = Column(String, default='')
+    rate = Column(Integer, default=0)
+
+
 class Dialogs(Base):
     __tablename__ = "dialogs"
 
@@ -46,7 +63,9 @@ class Proxy(Base):
     __tablename__ = "proxy"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    proxy = Column(String, default='', nullable=False)
+    host = Column(String, default='', nullable=False)
+    login = Column(String, default='', nullable=False)
+    password = Column(String, default='', nullable=False)
     in_use = Column(Integer, default=0)
     all_use = Column(Integer, default=0)
     is_life = Column(Boolean, default=True)
