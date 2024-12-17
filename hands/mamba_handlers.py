@@ -17,8 +17,9 @@ from selenium.common.exceptions import StaleElementReferenceException, TimeoutEx
 
 from brains.brain import check_dialog, read_msg, write_msg
 from database.req import get_proxy_by_id, get_best_proxy, update_acc, get_dialog
-from bot.handlers.errors import webscrab_error_handler
+from bot.handlers.errors import webscrab_error_handler, safe_send_message
 from errors.errors import ProxyError
+from instance import bot
 
 
 @webscrab_error_handler
@@ -50,23 +51,21 @@ async def check_proxy(proxy):
 @webscrab_error_handler
 async def proxy_initialization(user_id, proxy_id):
     proxy = await get_proxy_by_id(proxy_id)
-    if not check_proxy(proxy):
+    if not await check_proxy(proxy):
         new_proxy_id = await get_best_proxy()
         if not new_proxy_id:
             raise ProxyError
         await update_acc(user_id, "mamba", {'proxy_id': new_proxy_id})
-        await proxy_initialization(user_id, new_proxy_id)
-        return
-    chrome_options = Options()
-    chrome_options.add_argument(f'--proxy-server={proxy.proxy}')
-    return chrome_options
+        proxy = await proxy_initialization(user_id, new_proxy_id)
+        return proxy
+    return proxy
 
 
 class ChromeExtended(webdriver.Chrome):
     def __init__(self, *args, options=None, proxy=None, **kwargs):
         options = options or Options()
 
-        options.add_argument("--headless=new")
+        # options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
@@ -102,7 +101,7 @@ class ChromeExtended(webdriver.Chrome):
 
 @webscrab_error_handler
 async def create_con(proxy=None):
-    driver = ChromeExtended(proxy)
+    driver = ChromeExtended(proxy=proxy)
     driver.implicitly_wait(10)  # TODO: delete after tests
     wait = WebDriverWait(driver, 30)
     return driver, wait
@@ -168,6 +167,7 @@ async def mamba_dialog_handler(driver, wait, dialog, user_id):
             EC.element_to_be_clickable((By.XPATH, '//div[@data-name="messenger-send-message-icon"]'))
         )
         send_button.click()
+        await safe_send_message(bot, 483458201, 'все круто!')
 
 
 @webscrab_error_handler

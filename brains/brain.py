@@ -76,8 +76,7 @@ async def read_msg(dialog_id, msg):
             raise NumberError(dialog.user_id, dialog_id)
         rate = int(ans)
         if 5 <= rate <= 7:
-            # await trigger_update_def_part_1(dialog.user_id, msg, rate)
-            continue
+            await trigger_update_def_part_1(dialog.user_id, msg, rate)
         elif rate < 5:
             continue
         else:

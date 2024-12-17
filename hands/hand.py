@@ -7,11 +7,10 @@ from hands.mamba_handlers import create_con, close_con, mamba_login, mamba_dialo
 
 async def mamba_hand(user_id: int):
     acc = await get_acc(user_id, "mamba")
-    # proxy = f"http://GXjt8nK3:ghhPdd4C@85.142.47.227:62608"
-    proxy = await get_proxy_by_id(acc.proxy_id)
+    proxy = await proxy_initialization(user_id, acc.proxy_id)
     proxy_ready = f"http://{proxy.login}:{proxy.password}@{proxy.host}"
 
-    driver, wait = await create_con()  # proxy_ready)
+    driver, wait = await create_con(proxy_ready)
 
     login = acc.login
     password = acc.password

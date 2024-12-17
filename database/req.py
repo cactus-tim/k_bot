@@ -1,6 +1,6 @@
 from sqlalchemy import select, desc, distinct, and_
 
-from database.models import User, Dialogs, Proxy, Accs, async_session
+from database.models import User, Dialogs, Proxy, Accs, async_session, Upd, UpdWait
 from errors.errors import Error404, Error409, ContentError
 from instance import client
 from bot.handlers.errors import gpt_error_handler, db_error_handler
@@ -271,25 +271,71 @@ async def update_dialog(dialog_id: int, data: dict):
             await session.commit()
 
 
-async def get_upd():
-    pass
+@db_error_handler
+async def get_upd(user_id):
+    async with async_session() as session:
+        upd = await session.scalar(select(Upd).where(Upd.id == user_id))
+        if upd:
+            return upd
+        else:
+            return None
 
 
-async def create_upd():
-    pass
+@db_error_handler
+async def create_upd(user_id, mes, rate):
+    async with async_session() as session:
+        upd = await get_upd(user_id)
+        if not upd:
+            data = {'id': user_id, 'mes': mes, 'rate': rate}
+            user_data = Upd(**data)
+            session.add(user_data)
+            await session.commit()
+        else:
+            raise Error409
 
 
-async def del_upd():
-    pass
+@db_error_handler
+async def del_upd(user_id):
+    async with async_session() as session:
+        upd = await get_upd(user_id)
+        if not upd:
+            raise Error409
+        else:
+            await session.delete(upd)
+            await session.commit()
+            return "ok"
 
 
-async def get_upd_wait():
-    pass
+@db_error_handler
+async def get_upd_wait(user_id):
+    async with async_session() as session:
+        upd = await session.scalar(select(UpdWait).where(UpdWait.id == user_id))
+        if upd:
+            return upd
+        else:
+            return None
 
 
-async def create_upd_wait():
-    pass
+@db_error_handler
+async def create_upd_wait(user_id, mes, rate):
+    async with async_session() as session:
+        upd = await get_upd_wait(user_id)
+        if not upd:
+            data = {'id': user_id, 'mes': mes, 'rate': rate}
+            user_data = UpdWait(**data)
+            session.add(user_data)
+            await session.commit()
+        else:
+            raise Error409
 
 
-async def del_upd_wait():
-    pass
+@db_error_handler
+async def del_upd_wait(user_id):
+    async with async_session() as session:
+        upd = await get_upd_wait(user_id)
+        if not upd:
+            raise Error409
+        else:
+            await session.delete(upd)
+            await session.commit()
+            return "ok"

@@ -1,4 +1,5 @@
 from aiogram import Bot
+from pytz import timezone
 from aiogram.enums import ParseMode
 import os
 from dotenv import load_dotenv
@@ -37,5 +38,5 @@ event = asyncio.Event()
 token = os.getenv('TOKEN_API_GPT')
 client = OpenAI(api_key=token)
 
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(timezone=timezone('Europe/Moscow'))
 

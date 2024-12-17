@@ -7,6 +7,8 @@ from functools import wraps
 import asyncio
 from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException, ElementNotInteractableException
 from openai import AuthenticationError, RateLimitError, APIConnectionError, APIError
+from aiohttp import ClientError
+from asyncio import TimeoutError
 
 from errors.errors import ContentError
 from instance import logger, bot, client
@@ -69,29 +71,43 @@ async def safe_send_message(bott: Bot, recipient, text: str, reply_markup=ReplyK
 
 def webscrab_error_handler(func):
     @wraps(func)
-    async def wrapper(*args, **kwargs):
-        try:
-            result = await func(*args, **kwargs)
-            return result
-        except ProxyError as e:
-            logger.error(f"Ошибка ожидания загрузки страницы: {e}")
-            await safe_send_message(bot, 483458201, "Proxy fallen")  # temporary
-            return None
-        except TimeoutException as e:
-            logger.error(f"Ошибка ожидания загрузки страницы: {e}")
-            return None
-        except NoSuchElementException as e:
-            logger.error(f"Ошибка нахождения элемента для ввода логина/пароля: {e}")
-            return None
-        except ElementNotInteractableException as e:
-            logger.error(f"Элемент не может быть использован: {e}")
-            return None
-        except WebDriverException as e:
-            logger.error(f"Ошибка инициализации драйвера: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Неизвестная ошибка: {str(e)}")
-            return None
+    async def wrapper(*args, retry_attempts=3, delay_between_retries=5, **kwargs):
+        for attempt in range(retry_attempts):
+            try:
+                result = await func(*args, **kwargs)
+                return result
+            except ProxyError as e:
+                logger.error(f"Ошибка ожидания загрузки страницы: {e}")
+                await safe_send_message(bot, 483458201, "Proxy fallen")  # temporary
+                return None
+            except TimeoutException as e:
+                logger.error(f"Ошибка ожидания загрузки страницы: {e}")
+                await safe_send_message(bot, 483458201, 'пезда')
+                return None
+            except NoSuchElementException as e:
+                logger.error(f"Ошибка нахождения элемента для ввода логина/пароля: {e}")
+                await safe_send_message(bot, 483458201, 'пезда')
+                return None
+            except ElementNotInteractableException as e:
+                logger.error(f"Элемент не может быть использован: {e}")
+                await safe_send_message(bot, 483458201, 'пезда')
+                return None
+            except WebDriverException as e:
+                logger.error(f"Ошибка инициализации драйвера: {e}")
+                await safe_send_message(bot, 483458201, 'пезда')
+                return None
+            except (ClientError, TimeoutError) as e:  # Обработка HTTP ошибок
+                logger.error(f"Ошибка HTTP клиента или превышение времени ожидания: {e}")
+                if attempt < retry_attempts - 1:
+                    await asyncio.sleep(delay_between_retries)
+                else:
+                    logger.exception(f"{str(e)}. All attempts spent {attempt + 1}/{retry_attempts}")
+                    await safe_send_message(bot, 483458201, 'HTTP timeout error occurred')
+                    return None
+            except Exception as e:
+                logger.error(f"Неизвестная ошибка: {str(e)}")
+                await safe_send_message(bot, 483458201, 'пезда')
+                return None
     return wrapper
 
 

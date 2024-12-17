@@ -186,15 +186,15 @@ async def gpt_handler_first(message: Message, state: FSMContext):
     msg = await gpt_assystent_mes(thread_id, 'asst_YIrqaeL1mUSgcwqDHDBZUJTq', user_message)
     break_state = msg.find('{') + msg.find('}') != -2
     if break_state:
-        bot_msg = await safe_send_message(bot, message, "Идет парсинг диалогов для настройке вашего персонального ИИ, "
-                                                        "пожалуйста подождите")
-        # dialogs = await mamba_parsing_dialogs(message.from_user.id)
+        # bot_msg = await safe_send_message(bot, message, "Идет парсинг диалогов для настройке вашего персонального ИИ, "
+        #                                                 "пожалуйста подождите")
+        # dialogs = await mamba_parsing_dialogs(message.from_user.id) to comeback
         dialogs = 'пропустим этото этап и сразу перейдем к промпту'  # to del
         msg = await gpt_assystent_mes(thread_id, 'asst_YIrqaeL1mUSgcwqDHDBZUJTq', dialogs)
         prompt = await clean_prompt(msg)
-        dialogs = 'some shit'  # to del
+        dialogs = 'some thing went wrong'  # to del
         await create_brain(user_id, prompt, dialogs)
-        await bot_msg.delete()
+        # await bot_msg.delete()
         await safe_send_message(bot, message, "Отлично, мы собрали необходимую информацию!\n"
                                               "Напишите любое сообщение, что бы продолжить.")
         await state.update_data({'first': True})
@@ -274,6 +274,6 @@ async def gpt_handler_finish(message: Message, state: FSMContext):
         await safe_send_message(bot, message, "надо перепройти вторую часть анкеты, там что то пошло не по плану")
         await state.set_state(QuestState.second_quest)
     else:
-        await safe_send_message(bot, message, "все круто")
+        await safe_send_message(bot, message, "Отлично,ваш индивидуальный ассистент готов.\nТеперь надо добавить аккаунт. Используйте для этого /add_acc")
         await update_user(message.from_user.id, {'is_active': True})
         await state.clear()
