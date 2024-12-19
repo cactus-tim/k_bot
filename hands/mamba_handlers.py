@@ -13,7 +13,7 @@ import zipfile
 from selenium.webdriver.remote.webelement import WebElement
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
-
+from selenium.webdriver.common.action_chains import ActionChains
 
 from brains.brain import check_dialog, read_msg, write_msg
 from database.req import get_proxy_by_id, get_best_proxy, update_acc, get_dialog
@@ -123,14 +123,24 @@ async def mamba_login(driver, wait, username, pas):
     driver.get("https://www.mamba.ru/ru/login")
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
     time.sleep(5)
+    print('===' * 100, 'suka1')
     login_field = driver.find_element(By.NAME, "login")
     login_field.send_keys(username)
     time.sleep(5)
+    print('===' * 100, 'suka2')
     password_field = driver.find_element(By.NAME, "password")
     password_field.send_keys(pas)
     time.sleep(5)
+    print('===' * 100, 'suka3')
     submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
-    submit_button.click()
+    try:
+        submit_button.click()
+        print('===' * 100, 'sukaaaa1')
+    except Exception as e:
+        print('==='*100, 'sukaaaa2')
+        actions = ActionChains(driver)
+        actions.move_to_element(submit_button).click().perform()
+    print('===' * 100, 'wiiin')
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
 
 
