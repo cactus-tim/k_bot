@@ -184,7 +184,7 @@ async def mamba_dialogs_handler(driver, wait, user_id):
         await close_popup(driver)
         unread_dialogs = driver.find_elements(By.XPATH, '//a[.//div[@data-name="counter-unread-message"]]')
         print('===' * 100, 'suka1')
-        # print(f"Количество непрочитанных диалогов: {len(unread_dialogs)}")
+        print(f"Количество непрочитанных диалогов: {len(unread_dialogs)}")
 
         if not unread_dialogs:
             # print("Нет непрочитанных диалогов.")
