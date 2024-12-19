@@ -123,24 +123,18 @@ async def mamba_login(driver, wait, username, pas):
     driver.get("https://www.mamba.ru/ru/login")
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
     time.sleep(5)
-    print('===' * 100, 'suka1')
     login_field = driver.find_element(By.NAME, "login")
     login_field.send_keys(username)
     time.sleep(5)
-    print('===' * 100, 'suka2')
     password_field = driver.find_element(By.NAME, "password")
     password_field.send_keys(pas)
     time.sleep(5)
-    print('===' * 100, 'suka3')
     submit_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
     try:
         submit_button.click()
-        print('===' * 100, 'sukaaaa1')
     except Exception as e:
-        print('==='*100, 'sukaaaa2')
         actions = ActionChains(driver)
         actions.move_to_element(submit_button).click().perform()
-    print('===' * 100, 'wiiin')
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
 
 
@@ -148,10 +142,12 @@ async def mamba_login(driver, wait, username, pas):
 async def mamba_dialog_handler(driver, wait, dialog, user_id):
     unread_count = int(dialog.find_element(By.XPATH, './/span[@class="sc-d27dsj-0 fujUOM"]').text)
     dialog.click()
+    print('===' * 100, 'suka2')
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
     time.sleep(20)
     current_url = driver.current_url
     dialog_id = int(current_url.split('/')[-2])
+    print('===' * 100, 'suka3')
     if not await check_dialog(dialog_id, user_id):
         return
     dialog_struct = await get_dialog(dialog_id)
@@ -187,6 +183,7 @@ async def mamba_dialogs_handler(driver, wait, user_id):
         time.sleep(20)
         await close_popup(driver)
         unread_dialogs = driver.find_elements(By.XPATH, '//a[.//div[@data-name="counter-unread-message"]]')
+        print('===' * 100, 'suka1')
         # print(f"Количество непрочитанных диалогов: {len(unread_dialogs)}")
 
         if not unread_dialogs:
