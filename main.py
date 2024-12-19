@@ -6,6 +6,7 @@ from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from bot.handlers.errors import safe_send_message
 from confige import BotConfig
+from aiogram.types import Message
 from pytz import timezone
 
 from database.req import get_all_accs, get_user
@@ -13,6 +14,11 @@ from hands.hand import mamba_hand
 from instance import bot, scheduler, logger
 from bot.handlers import user, errors, questionary, admin, def_update
 from database.models import async_main
+
+
+@admin.router.message('now')
+async def now_run(message: Message):
+    await loop()
 
 
 def register_routers(dp: Dispatcher) -> None:
