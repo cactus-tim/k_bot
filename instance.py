@@ -40,3 +40,4 @@ client = OpenAI(api_key=token)
 
 scheduler = AsyncIOScheduler(timezone=timezone('Europe/Moscow'))
 
+path = os.getenv('PATH')

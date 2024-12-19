@@ -19,7 +19,7 @@ from brains.brain import check_dialog, read_msg, write_msg
 from database.req import get_proxy_by_id, get_best_proxy, update_acc, get_dialog
 from bot.handlers.errors import webscrab_error_handler, safe_send_message
 from errors.errors import ProxyError
-from instance import bot
+from instance import bot, path
 
 
 @webscrab_error_handler
@@ -78,7 +78,7 @@ class ChromeExtended(webdriver.Chrome):
         with context as extensionDirpath:
             self._setupProxy(extensionDirpath, proxy, options)
 
-            service = Service('/Users/timofejsosnin/.wdm/drivers/chromedriver/mac64/131.0.6778.85/chromedriver-mac-arm64/chromedriver')
+            service = Service(path)
             super().__init__(*args, options=options, service=service, **kwargs)
 
     def _setupProxy(self, extensionDirpath, proxy, options):
