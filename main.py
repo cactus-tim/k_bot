@@ -18,6 +18,10 @@ from database.models import async_main
 
 @admin.router.message('now')
 async def now_run(message: Message):
+    user = await get_user(message.from_user.id)
+    if not user.is_superuser:
+        return
+    await safe_send_message(bot, user.id, 'поехали')
     await loop()
 
 
