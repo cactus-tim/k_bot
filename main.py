@@ -23,15 +23,16 @@ async def now_run(message: Message):
     if not user.is_superuser:
         return
     await safe_send_message(bot, user.id, 'поехали')
-    await loop()
+    await loop(False)
 
 
 def register_routers(dp: Dispatcher) -> None:
     dp.include_routers(user.router, errors.router, questionary.router, admin.router, def_update.router)
 
 
-async def loop():
-    time.sleep(randint(0, 52431))
+async def loop(flag=True):
+    if flag:
+        time.sleep(randint(0, 52431))
     accs = await get_all_accs()
     if not accs:
         return
