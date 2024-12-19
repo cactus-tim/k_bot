@@ -78,7 +78,7 @@ class ChromeExtended(webdriver.Chrome):
         with context as extensionDirpath:
             self._setupProxy(extensionDirpath, proxy, options)
 
-            service = Service(path)
+            service = Service(ChromeDriverManager().install())
             super().__init__(*args, options=options, service=service, **kwargs)
 
     def _setupProxy(self, extensionDirpath, proxy, options):
