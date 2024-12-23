@@ -65,11 +65,15 @@ class ChromeExtended(webdriver.Chrome):
     def __init__(self, *args, options=None, proxy=None, **kwargs):
         options = options or Options()
 
-        options.add_argument("--headless")
+        # options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
         options.add_argument("--window-size=1200,875")
+        # options.add_argument(
+        #     "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"
+        # )
+        options.add_argument("--disable-blink-features=AutomationControlled")
 
         if proxy:
             context = tempfile.TemporaryDirectory()
@@ -100,10 +104,29 @@ class ChromeExtended(webdriver.Chrome):
         options.add_argument(f"--load-extension={extensionDirpath}")
 
 
+from seleniumwire import webdriver
+
+
 @webscrab_error_handler
 async def create_con(proxy=None):
-    driver = ChromeExtended(proxy=proxy)
+    options = {
+        'proxy': {
+            'http': 'http://VpLXLD:1P1YJ0@160.116.216.104:8000',
+            'https': 'http://VpLXLD:1P1YJ0@160.116.216.104:8000',
+            'no_proxy': 'localhost,127.0.0.1'
+        }
+    }
+    driver = webdriver.Chrome(seleniumwire_options=options)
+
+    # driver = ChromeExtended(proxy=proxy)
     driver.implicitly_wait(10)  # TODO: delete after tests
+    # driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+    #     "source": """
+    #                 Object.defineProperty(navigator, 'webdriver', {
+    #                     get: () => undefined
+    #                 })
+    #             """
+    # })
     wait = WebDriverWait(driver, 30)
     return driver, wait
 
@@ -120,12 +143,19 @@ async def captcha_close():
 
 @webscrab_error_handler
 async def mamba_login(driver, wait, username, pas):
+    driver.get("https://httpbin.org/ip")
+    print('===' * 80, driver.page_source)
+    return
     driver.get("https://www.mamba.ru/ru/login")
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
     time.sleep(5)
-    login_field = driver.find_element(By.NAME, "login")
-    login_field.send_keys(username)
-    time.sleep(5)
+    try:
+        login_field = driver.find_element(By.NAME, "login")
+        login_field.send_keys(username)
+        time.sleep(5)
+    except Exception as e:
+        driver.save_screenshot("unread_dialogs_error.png")
+        return
     password_field = driver.find_element(By.NAME, "password")
     password_field.send_keys(pas)
     time.sleep(5)
@@ -182,12 +212,13 @@ async def mamba_dialogs_handler(driver, wait, user_id):
     while True:
         time.sleep(20)
         await close_popup(driver)
+        # TODO: here shit
         unread_dialogs = driver.find_elements(By.XPATH, '//a[.//div[@data-name="counter-unread-message"]]')
         print('===' * 100, 'suka1')
         print(f"Количество непрочитанных диалогов: {len(unread_dialogs)}")
 
         if not unread_dialogs:
-            # print("Нет непрочитанных диалогов.")
+            driver.save_screenshot("unread_dialogs_error.png")
             break
         dialog = unread_dialogs[0]
         await mamba_dialog_handler(driver, wait, dialog, user_id)
