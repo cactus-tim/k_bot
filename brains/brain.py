@@ -29,10 +29,10 @@ async def is_number_in_range(s):
 
 async def check_dialog(dialog_id, user_id):
     dialog = await get_dialog(dialog_id)
-    if dialog == "not created":
-        await create_dialog(dialog_id, user_id)
-        dialog = await get_dialog(dialog_id)
-    if dialog.status == "banned" or dialog.status == "approved":
+    # if dialog == "not created":
+    #     await create_dialog(dialog_id, user_id)
+    #     dialog = await get_dialog(dialog_id)
+    if not dialog or dialog.status == "banned" or dialog.status == "approved":
         return False
     return True
 

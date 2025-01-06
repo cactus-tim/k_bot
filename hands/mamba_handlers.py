@@ -1,8 +1,8 @@
 import contextlib
 import tempfile
 from urllib.parse import urlparse
-
-from selenium import webdriver
+import undetected_chromedriver as uc
+from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.service import Service
@@ -16,7 +16,7 @@ from selenium.common.exceptions import StaleElementReferenceException, TimeoutEx
 from selenium.webdriver.common.action_chains import ActionChains
 
 from brains.brain import check_dialog, read_msg, write_msg
-from database.req import get_proxy_by_id, get_best_proxy, update_acc, get_dialog
+from database.req import get_proxy_by_id, get_best_proxy, update_acc, get_dialog, create_dialog
 from bot.handlers.errors import webscrab_error_handler, safe_send_message
 from errors.errors import ProxyError
 from instance import bot, path
@@ -94,7 +94,8 @@ class ChromeExtended(webdriver.Chrome):
 
         manifest_json = '{"version":"1.0.0","manifest_version":2,"name":"Chrome Proxy","permissions":["proxy","tabs","unlimitedStorage","storage","<all_urls>","webRequest","webRequestBlocking"],"background":{"scripts":["background.js"]},"minimum_chrome_version":"22.0.0"}'
         background_js = 'var e={mode:"fixed_servers",rules:{singleProxy:{scheme:"%s",host:"%s",port:parseInt(%s)},bypassList:["localhost"]}};chrome.proxy.settings.set({value:e,scope:"regular"},(function(){})),chrome.webRequest.onAuthRequired.addListener((function(e){return{authCredentials:{username:"%s",password:"%s"}}}),{urls:["<all_urls>"]},["blocking"]);' \
-            % (parsedProxy.scheme, parsedProxy.hostname, parsedProxy.port, parsedProxy.username, parsedProxy.password)
+                        % (parsedProxy.scheme, parsedProxy.hostname, parsedProxy.port, parsedProxy.username,
+                           parsedProxy.password)
 
         with open(f"{extensionDirpath}/manifest.json", "w", encoding="utf8") as f:
             f.write(manifest_json)
@@ -104,29 +105,44 @@ class ChromeExtended(webdriver.Chrome):
         options.add_argument(f"--load-extension={extensionDirpath}")
 
 
-from seleniumwire import webdriver
+async def interceptor(request):
+    request.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15'
+    del request.headers['X-Selenium-Wire']
 
 
 @webscrab_error_handler
 async def create_con(proxy=None):
+    parsedProxy = urlparse(proxy)
     options = {
         'proxy': {
-            'http': 'http://VpLXLD:1P1YJ0@160.116.216.104:8000',
-            'https': 'http://VpLXLD:1P1YJ0@160.116.216.104:8000',
-            'no_proxy': 'localhost,127.0.0.1'
+            # 'http': f'{parsedProxy.scheme}://{parsedProxy.username}:{parsedProxy.password}@{parsedProxy.hostname}:{parsedProxy.port}',
+            # 'https': f'{parsedProxy.scheme}://{parsedProxy.username}:{parsedProxy.password}@{parsedProxy.hostname}:{parsedProxy.port}',
+            'no_proxy': 'local                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              host,127.0.0.1'
         }
     }
-    driver = webdriver.Chrome(seleniumwire_options=options)
+
+    chrome_options = Options()
+    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1200,875")
+    chrome_options.add_argument(
+        "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15"
+    )
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+
+    driver = uc.Chrome(seleniumwire_options=options, options=chrome_options)
 
     # driver = ChromeExtended(proxy=proxy)
-    driver.implicitly_wait(10)  # TODO: delete after tests
-    # driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-    #     "source": """
-    #                 Object.defineProperty(navigator, 'webdriver', {
-    #                     get: () => undefined
-    #                 })
-    #             """
-    # })
+    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+        "source": """
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            Object.defineProperty(navigator, 'platform', { get: () => 'MacIntel' });
+            Object.defineProperty(navigator, 'vendor', { get: () => 'Apple Computer, Inc.' });
+        """
+    })
+    driver.request_interceptor = interceptor
     wait = WebDriverWait(driver, 30)
     return driver, wait
 
@@ -143,9 +159,9 @@ async def captcha_close():
 
 @webscrab_error_handler
 async def mamba_login(driver, wait, username, pas):
-    driver.get("https://httpbin.org/ip")
-    print('===' * 80, driver.page_source)
-    return
+    # driver.get("https://httpbin.org/ip")
+    # print('===' * 80, driver.page_source)
+    # return
     driver.get("https://www.mamba.ru/ru/login")
     wait.until(lambda driver: driver.execute_script("return document.readyState") == "complete")
     time.sleep(5)
@@ -178,16 +194,21 @@ async def mamba_dialog_handler(driver, wait, dialog, user_id):
     current_url = driver.current_url
     dialog_id = int(current_url.split('/')[-2])
     print('===' * 100, 'suka3')
+    messages = driver.find_elements(By.XPATH, '//span[@data-name="message-text"]')
+    if len(messages) - 1 == len(messages[-unread_count:]):
+        await create_dialog(dialog_id, user_id)
+    messages = messages[-unread_count:]
+    msg = ''
     if not await check_dialog(dialog_id, user_id):
         return
     dialog_struct = await get_dialog(dialog_id)
-    messages = driver.find_elements(By.XPATH, '//span[@data-name="message-text"]')
-    messages = messages[-unread_count:]
-    msg = ''
     for message in messages:
         if message.text == "Привет! Похоже, что мы понравились друг другу. Давай пообщаемся!":
+            # await create_dialog(dialog_id, user_id)
             continue
         msg += message.text + '\n'
+    if msg == '':
+        return
     if not await read_msg(dialog_id, msg):
         return
     flag, ans = await write_msg(dialog_id, msg)

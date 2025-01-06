@@ -5,6 +5,7 @@ from random import randint
 from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from bot.handlers.errors import safe_send_message
+from brains.brain import send_dialog_to_user
 from confige import BotConfig
 from aiogram.types import Message
 from aiogram.filters import Command
@@ -66,6 +67,7 @@ async def main() -> None:
         #     dp.start_polling(bot, skip_updates=True),
         #     loop()
         # )
+        # await send_dialog_to_user(1813607008, 7.5)
         await dp.start_polling(bot, skip_updates=True)
     except (KeyboardInterrupt, SystemExit):
         logger.info("Остановка бота по сигналу")

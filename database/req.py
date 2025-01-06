@@ -236,7 +236,7 @@ async def get_dialog(dialog_id: int):
         if dialog:
             return dialog
         else:
-            return "not created"
+            return None
 
 
 @db_error_handler
@@ -245,7 +245,7 @@ async def create_dialog(dialog_id: int, user_id: int):
         dialog = await get_dialog(dialog_id)
         user = await get_user(user_id)
         data = {}
-        if dialog == 'not created':
+        if not dialog:
             data['id'] = dialog_id
             data['user_id'] = user_id
             data['thread_brain'] = await create_thread()
@@ -262,7 +262,7 @@ async def create_dialog(dialog_id: int, user_id: int):
 async def update_dialog(dialog_id: int, data: dict):
     async with async_session() as session:
         dialog = await get_dialog(dialog_id)
-        if dialog == 'not created':
+        if not dialog:
             raise Error404
         else:
             for key, value in data.items():
